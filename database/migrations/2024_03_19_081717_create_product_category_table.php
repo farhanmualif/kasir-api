@@ -11,15 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('purchasing_suplier', function (Blueprint $table) {
+        Schema::create('product_category', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('purchase_id');
-            $table->unsignedBigInteger('suplier_id');
+            $table->unsignedBigInteger('product_id');
+            $table->unsignedBigInteger('category_id');
             $table->timestamps();
 
-
-            $table->foreign('purcase_id')->references('id')->on('purchase');
-            $table->foreign('suplier_id')->references('id')->on('suplier');
+            $table->foreign('product_id')->references('id')->on('products');
+            $table->foreign('category_id')->references('id')->on('categories');
         });
     }
 
@@ -28,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('purchasing_suplier');
+        Schema::dropIfExists('product_category');
     }
 };

@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\User\UserController;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -18,13 +20,24 @@ use Illuminate\Support\Facades\Route;
 */
 
 
-Route::post('/register',[AuthController::class, 'register']);
-Route::post('/login',[AuthController::class, 'login']);
-Route::post('/logout',[AuthController::class, 'logout']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
 
 // Route::middleware('auth:sanctum')->resource('users', [UserController::class]);
 
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return response()->json(User::all());
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     try {
+//         return response()->json(User::all());
+//     } catch (\Throwable $th) {
+//         //throw $th;
+//         echo $th;
+//     }
+// });
+
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::resource('products', ProductController::class);
+    Route::post('/logout', [AuthController::class, 'logout']);
 });
