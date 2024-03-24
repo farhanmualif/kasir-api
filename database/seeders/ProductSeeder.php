@@ -26,7 +26,7 @@ class ProductSeeder extends Seeder
             ],
             [
                 // "uuid" => Uuid::uuid4(),
-                "barcode" => "9898" . \rand(1, 20),
+                // "barcode" => "9898" . \rand(1, 20),
                 "name" => "sabun lifeboy",
                 "stock" => 20,
                 "selling_price" => 1500.0,

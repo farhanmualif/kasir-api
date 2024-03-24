@@ -21,7 +21,7 @@ class ProductCollection extends JsonResource
             "barcode" => $this->barcode,
             "stock" => $this->stock,
             "selling_price" => $this->selling_price,
-            "purcase_price" => $this->purcase_price,
+            "purchase_price" => $this->purchase_price,
             "image" => $this->image,
             "created_at" => $this->created_at,
             "updated_at" => $this->updated_at,

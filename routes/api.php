@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\User\UserController;
 use App\Models\Product;
 use App\Models\User;
@@ -37,7 +38,8 @@ Route::post('/login', [AuthController::class, 'login']);
 // });
 
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'require_header'])->group(function () {
     Route::resource('products', ProductController::class);
+    Route::resource('transaction', TransactionController::class);
     Route::post('/logout', [AuthController::class, 'logout']);
 });

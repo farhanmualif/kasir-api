@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Resources\ProductCollection;
 use App\Models\Product;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -16,11 +15,8 @@ class ProductController extends Controller
      */
     public function index()
     {
-        return \response()->json([
-            "status" => true,
-            "message" => "data found",
-            "data" => ProductCollection::collection(Product::all()),
-        ]);
+        $data = Product::all();
+        return responseJson("data found", ProductCollection::collection($data));
     }
 
     /**
@@ -36,7 +32,6 @@ class ProductController extends Controller
      */
     public function store(ProductStoreRequest $request)
     {
-
         try {
             $file_name = "";
 
@@ -48,28 +43,24 @@ class ProductController extends Controller
             $validated = $request->validated();
             $validated["image"] = $file_name;
             $insert_product = Product::create($validated);
-
-            return \response()->json([
-                "status" => \true,
-                "message" => "insert data successfully",
-                "data" => new ProductCollection($insert_product)
-            ])->setStatusCode(200);
+            return responseJson("insert data successfully", new ProductCollection($insert_product));
         } catch (\Throwable $th) {
-
-            return \response()->json([
-                "status" => \false,
-                "message" => "insert data successfully",
-                "data" => $th->getMessage()
-            ])->setStatusCode(500);
+            return responseJson("insert data failure, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
         }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $uuid)
     {
-        //
+        try {
+            $product = Product::where("uuid", $uuid)->first();
+
+            return responseJson("get data successfully", new ProductCollection($product));
+        } catch (\Throwable $th) {
+            return responseJson("get data failed {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()} {$th->getPrevious()}", null, false, 500);
+        }
     }
 
     /**
@@ -90,10 +81,7 @@ class ProductController extends Controller
             $payload = $request->all();
             $product = Product::where("uuid", $id)->firstOrFail();
             if (!$product) {
-                return \response()->json([
-                    "status" => \false,
-                    "message" => "data not found"
-                ]);
+                return responseJson("data not found", null, false, 400);
             }
             $file_name = "";
             if ($request->hasFile("image")) {
@@ -105,21 +93,13 @@ class ProductController extends Controller
             $payload["image"] = $file_name;
             unset($payload["_method"]);
             Product::where("uuid", $id)->update($payload);
-            return \response()->json([
-                "status" => \true,
-                "message" => "update data successfully",
-                "data" => Product::where("uuid", $id)->firstOrFail()
-            ]);
+            return responseJson("update data successfully", new ProductCollection(Product::where("uuid", $id)->firstOrFail()));
+
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
             DB::commit();
-            return response()->json(
-                [
-                    "status" => \false,
-                    "message" => $th->getMessage(),
-                ]
-            )->setStatusCode(500);
+            return responseJson("update data failed {$th->getMessage()}", null, false, 500);
         }
     }
 
@@ -128,6 +108,15 @@ class ProductController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        DB::beginTransaction();
+        try {
+            Product::where("uuid", $id)->delete();
+            DB::commit();
+            return responseJson("delete data successfully", null, true, 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            DB::commit();
+            return responseJson("any problem {$th->getMessage()}", null, false, 500);
+        }
     }
 }

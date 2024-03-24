@@ -10,10 +10,11 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    public function register(Request $request) {
-        $payload =$request->all();
+    public function register(Request $request)
+    {
+        $payload = $request->all();
 
-        $validate = Validator::make($payload,[
+        $validate = Validator::make($payload, [
             'name' => 'required',
             'email' => 'required|email|unique:users,email',
             'password' => 'required',
@@ -42,11 +43,13 @@ class AuthController extends Controller
         ])->setStatusCode(200);
     }
 
-    public function login(Request $request) {
+    public function login(Request $request)
+    {
 
         $payload = $request->all();
-        if (Auth::attempt(['email'=>$payload['email'] , 'password' => $payload['password']])) {
+        if (Auth::attempt(['email' => $payload['email'], 'password' => $payload['password']])) {
             $success['token'] = $request->user()->createToken('token-name', ['server:update'])->plainTextToken;
+            $success['uuid'] = $request->user()['uuid'];
             $success['user'] = $request->user()['name'];
             $success['email'] = $request->user()['email'];
             return \response()->json([
@@ -61,7 +64,8 @@ class AuthController extends Controller
         }
     }
 
-    public function logout(Request $request) {
+    public function logout(Request $request)
+    {
         // check any token ?
         $check_header = $request->header('Authorization');
         if ($check_header == \null) {
@@ -78,6 +82,5 @@ class AuthController extends Controller
             'status' => \true,
             'message' => 'token deleted'
         ])->setStatusCode(500);
-
     }
 }

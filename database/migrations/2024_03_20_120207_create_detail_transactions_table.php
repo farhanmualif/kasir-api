@@ -15,11 +15,11 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('id_transaction');
             $table->unsignedBigInteger('id_product');
+            $table->integer('total_price');
             $table->integer('quantity');
             $table->timestamps();
 
             $table->foreign('id_transaction')->references('id')->on('transactions');
-            $table->foreign('id_product')->references('id')->on('products');
         });
     }
 
