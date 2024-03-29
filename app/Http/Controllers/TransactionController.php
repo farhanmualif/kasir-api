@@ -35,7 +35,7 @@ class TransactionController extends Controller
     {
         DB::beginTransaction();
         try {
-            $payload = $request->all();
+            $payload = $request->validated();
             $transaction = $payload["transaction"];
             $total_payment = 0;
 
@@ -43,12 +43,15 @@ class TransactionController extends Controller
                 $total_payment += ($item['quantity'] * $item['item_price']);
             }
 
+            if ($payload['transaction']['cash'] < $total_payment) {
+                return responseJson("gagal menambahkan data transaction, cash kurang dari total transaction", null, false, 500);
+            }
+
             $insert_transaction = Transaction::create([
                 "no_transaction" => generateNoTransaction(),
                 "total_payment" => $total_payment,
                 "cash" => $transaction['cash'],
             ]);
-
 
 
             foreach ($transaction['items'] as $item) {

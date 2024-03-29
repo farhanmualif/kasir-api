@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProductStoreRequest;
+use App\Http\Requests\ProductUpdateRequest;
 use App\Http\Resources\ProductCollection;
 use App\Models\Product;
 use App\Models\Purchasing;
@@ -79,7 +80,7 @@ class ProductController extends Controller
     }
 
 
-    public function update(ProductStoreRequest $request, string $id)
+    public function update(ProductUpdateRequest $request, string $id)
     {
         DB::beginTransaction();
         try {
@@ -98,27 +99,36 @@ class ProductController extends Controller
             }
             $payload["image"] = $file_name;
             unset($payload["_method"]);
-            Product::where("uuid", $id)->update([
-                "name" => $payload['name'],
-                "barcode" => $payload['barcode'],
-                "stock" => $payload['stock'],
-                "selling_price" => $payload['selling_price'],
-                "purchase_price" => $payload['purchase_price'],
-            ]);
-            $no_purchasing = generateNoTransaction();
-            Purchasing::create([
-                'no_purchasing' => $no_purchasing,
-                'product_id' => $product->id,
-                'quantity' => $payload['stock'],
-                'description' => $payload['description'],
-                
-            ]);
-            return responseJson("produk berhasil di update", new ProductCollection(Product::where("uuid", $id)->firstOrFail()));
 
-            DB::commit();
+            $current_stock = $product->stock;
+            if ($payload['add_or_reduce_stock'] == "add") {
+
+                $new_stock = $current_stock + $payload['quantity_stok'];
+                Product::where("uuid", $id)->update([
+                    "name" => $payload['name'],
+                    "barcode" => $payload['barcode'],
+                    "stock" => $new_stock,
+                    "selling_price" => $payload['selling_price'],
+                    "purchase_price" => $payload['purchase_price'],
+                ]);
+                DB::commit();
+
+                return responseJson("produk berhasil di update", new ProductCollection(Product::where("uuid", $id)->firstOrFail()));
+            } else if ($payload['add_or_reduce_stock'] == "reduce") {
+                $new_stock = $current_stock - $payload['quantity_stok'];
+                Product::where("uuid", $id)->update([
+                    "name" => $payload['name'],
+                    "barcode" => $payload['barcode'],
+                    "stock" => $new_stock,
+                    "selling_price" => $payload['selling_price'],
+                    "purchase_price" => $payload['purchase_price'],
+                ]);
+                DB::commit();
+            } else {
+                return responseJson("gagal update produk add_or_reduce_stok barus berisi add atau reduce", null, false, 500);
+            }
         } catch (\Throwable $th) {
             DB::rollBack();
-            DB::commit();
             return responseJson("gagal update produk {$th->getMessage()} {$th->getFile()} {$th->getLine()}", null, false, 500);
         }
     }
