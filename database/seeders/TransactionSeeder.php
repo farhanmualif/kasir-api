@@ -4,7 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\DetailTransaction;
 use App\Models\Transaction;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Faker\Factory as Faker;
+
 
 class TransactionSeeder extends Seeder
 {
@@ -13,94 +16,61 @@ class TransactionSeeder extends Seeder
      */
     public function run(): void
     {
-        // $transactions = [
-        //     [
-        //         "id_product" => 1,
-        //         "quantity" => 2,
-        //         "total_price" => 2000.0,
-        //     ],
-        //     [
+        $transactions = [];
 
-        //         "id_product" => 2,
-        //         "quantity" => 2,
-        //         "total_price" => 3000.0,
-        //     ],
-        //     [
+        for ($i = 1; $i <= 30; $i++) {
 
-        //         "id_product" => 3,
-        //         "quantity" => 2,
-        //         "total_price" => 3000,
-        //     ],
-        // ];
+            for ($j = 1; $j <= 30; $j++) {
+                $transaction = [
+                    "cash" => 10000,
+                    "created_at" => Carbon::create(2021, $i == $j ? $i + 1 : $i, $j),
+                    "items" => [
+                        (object)[
+                            "id_product" => 1,
+                            "name" => "shampo clear",
+                            "quantity" => 2,
+                            "item_price" => 1000.00
+                        ],
+                        (object)[
+                            "id_product" => 2,
+                            "name" => "sabun lifeboy",
+                            "quantity" => 2,
+                            "item_price" => 1500.00
+                        ],
+                    ],
+                ];
+            }
 
-        // $total_payment = 0;
-
-        // $cash = 10000.00;
-
-        // foreach ($transactions as $transaction) {
-        //     $total_payment = $total_payment + $transaction["total_price"];
-        // }
-
-        // $insert_transaction = Transaction::create(
-        //     [
-        //         "no_transaction" => \generateNoTransaction(),
-        //         "total_payment" => $total_payment,
-        //         "cash" => $cash,
-        //         "change" => $cash - $total_payment
-        //     ]
-        // );
-
-        // foreach ($transactions as $transaction) {
-        //     DetailTransaction::create([
-        //         "id_transaction" => $insert_transaction->id,
-        //         "id_product" => $transaction['id_product'],
-        //         "total_price" => $transaction['total_price'],
-        //         "quantity" =>  $transaction['quantity'],
-        //     ]);
-        // }
-
-
-
-        $transaction = [
-            "cash" => 10000.00,
-            "items" =>  [
-                [
-                    "id_product" => 1,
-                    "name" => "shampo clear",
-                    "quantity" => 2,
-                    "total_price" => 2000.00
-                ],
-                [
-                    "id_product" => 2,
-                    "name" => "sabun lifeboy",
-                    "quantity" => 2,
-                    "total_price" => 3000.00
-                ],
-            ]
-        ];
-
-        $total_payment = 0;
-        foreach ($transaction['items'] as $item) {
-            $total_payment = $total_payment + $item['total_price'];
+            $transactions[] = $transaction;
         }
 
-        $insert_transaction = Transaction::create(
-            [
+
+        foreach ($transactions as $transaction) {
+            $total_payment = 0;
+            foreach ($transaction['items'] as $item) {
+                $total_price = $item->item_price * $item->quantity;
+                $total_payment += $total_price;
+            }
+
+            // dd($transaction);
+
+            $insert_transaction = Transaction::create([
                 "no_transaction" => generateNoTransaction(),
                 "total_payment" => $total_payment,
                 "cash" => $transaction['cash'],
-                "change" => $transaction['cash'] - $total_payment,
-            ]
-        );
-        foreach ($transaction['items'] as $item) {
-            DetailTransaction::create(
-                [
+                "created_at" => $transaction['created_at'],
+                "updated_at" => $transaction['created_at'],
+            ]);
+
+            foreach ($transaction['items'] as $item) {
+                DetailTransaction::create([
                     "id_transaction" => $insert_transaction->id,
-                    "id_product" => $item['id_product'],
-                    "total_price" => $item['total_price'],
-                    "quantity" => $item['quantity']
-                ]
-            );
+                    "id_product" => $item->id_product,
+                    "item_price" => $item->item_price,
+                    "total_price" => $item->item_price * $item->quantity,
+                    "quantity" => $item->quantity,
+                ]);
+            }
         }
     }
 }

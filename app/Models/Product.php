@@ -9,6 +9,16 @@ class Product extends Model
 {
     use HasFactory;
     protected $fillable = [
-        "uuid", "name", "barcode", "stock", "selling_price", "purchase_price", "image", "created_at", "updated_at"
+        "uuid", "name", "barcode", "stock", "selling_price", "purchase_price", "image", "created_at", "updated_at", "link"
     ];
+
+    /**
+     * The category that belong to the Product
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function category()
+    {
+        return $this->belongsToMany(Category::class, "product_category");
+    }
 }

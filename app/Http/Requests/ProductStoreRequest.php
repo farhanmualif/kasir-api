@@ -23,10 +23,13 @@ class ProductStoreRequest extends FormRequest
     {
         return [
             "name" =>  'required|max:100|string',
+            "barcode" =>  'max:100|string',
             "stock" =>  'required|max:100|numeric',
             "selling_price" =>  'required|numeric',
             "purchase_price" =>  'required|numeric',
             "image" =>  'image:jpeg,png,jpg,gif,svg|max:2048',
+            "category_id" => 'numeric|nullable',
+            "description" => 'nullable|max:200',
         ];
     }
 }

@@ -2,7 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema; 
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string("no_purchasing", 21);
             $table->unsignedBigInteger("product_id");
             $table->integer("quantity");
-            $table->string("description", 200);
+            $table->string("description", 200)->nullable();
             $table->decimal("total_payment");
             $table->timestamps();
         });

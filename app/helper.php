@@ -2,7 +2,6 @@
 
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Collection;
 
 if (!function_exists("generateNoTransaction")) {
     function generateNoTransaction()

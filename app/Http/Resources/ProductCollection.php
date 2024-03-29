@@ -16,6 +16,7 @@ class ProductCollection extends JsonResource
     {
 
         return [
+            "link" => $this->link,
             "uuid" => $this->uuid,
             "name" => $this->name,
             "barcode" => $this->barcode,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\TransactionStoreRequest;
 use App\Http\Resources\TransactionCollection;
 use App\Models\DetailTransaction;
+use App\Models\Product;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,7 @@ class TransactionController extends Controller
      */
     public function index()
     {
-        return \responseJson("data found", TransactionCollection::collection(Transaction::all()), true);
+        return \responseJson("data transaksi ditemukan", TransactionCollection::collection(Transaction::all()), true);
     }
 
     /**
@@ -34,34 +35,42 @@ class TransactionController extends Controller
     {
         DB::beginTransaction();
         try {
-            $body_transaction = $request->all();
+            $payload = $request->all();
+            $transaction = $payload["transaction"];
             $total_payment = 0;
-            foreach ($body_transaction["transaction"]["items"] as $item) {
-                $total_payment += $item["total_price"];
+
+            foreach ($transaction['items'] as $item) {
+                $total_payment += ($item['quantity'] * $item['item_price']);
             }
 
             $insert_transaction = Transaction::create([
                 "no_transaction" => generateNoTransaction(),
                 "total_payment" => $total_payment,
-                "cash" => $body_transaction['transaction']['cash'],
-                "change" => $body_transaction['transaction']['cash'] - $total_payment
+                "cash" => $transaction['cash'],
             ]);
 
-            foreach ($body_transaction["transaction"]["items"] as $item) {
+
+
+            foreach ($transaction['items'] as $item) {
                 DetailTransaction::create([
                     "id_transaction" => $insert_transaction->id,
                     "id_product" => $item['id_product'],
-                    "total_price" => $item['total_price'],
+                    "item_price" => $item["item_price"],
                     "quantity" => $item['quantity'],
+                    "total_price" => $item['item_price'] * $item['quantity'],
                 ]);
+
+                $product = Product::where('id', $item['id_product'])->first();
+                $product->stock = $product->stock - $item['quantity'];
+                $product->update();
             }
 
+
             DB::commit();
-            return responseJson("insert data successfully", new TransactionCollection($insert_transaction));
+            return responseJson("berhasil menambahkan data transaksi", new TransactionCollection($insert_transaction));
         } catch (\Throwable $th) {
             DB::rollBack();
-            DB::commit();
-            return responseJson("insert data failure, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
+            return responseJson("gagal menambahkan data transaksi, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
         }
     }
 
@@ -73,9 +82,9 @@ class TransactionController extends Controller
         try {
             $product = Transaction::where("no_transaction", $no_transaction)->first();
 
-            return responseJson("get data successfully", new TransactionCollection($product));
+            return responseJson("berhasil ambil data transaksi", new TransactionCollection($product));
         } catch (\Throwable $th) {
-            return responseJson("get data failed {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()} {$th->getPrevious()}", null, false, 500);
+            return responseJson("gagal ambil data transaksi {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()} {$th->getPrevious()}", null, false, 500);
         }
     }
 

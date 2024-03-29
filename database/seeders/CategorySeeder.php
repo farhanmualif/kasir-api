@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
+use App\Models\ProductCategory;
 use Illuminate\Database\Seeder;
 use Ramsey\Uuid\Uuid;
 
@@ -13,23 +14,20 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-
         $categories = [
-                [
-                    "uuid"=> Uuid::uuid4(),
-                    "name"=>"peralatan mandi",
-                    "uuid"=> Uuid::uuid4(),
-                    "name"=>"minuman",
-                    "uuid"=> Uuid::uuid4(),
-                    "name"=>"snack",
-                    "uuid"=> Uuid::uuid4(),
-                    "name"=>"bahan dapur",
-                ]
-            ];
+            "product_id" => 3,
+            "uuid" => Uuid::uuid4(),
+            "name" => "minuman",
+        ];
+        
+        $insert_category =  Category::create([
+            "name" => $categories["name"],
+            "uuid" => Uuid::uuid4(),
+        ]);
 
-        foreach ($categories as $category) {
-            Category::create($category);
-
-        }
+        ProductCategory::create([
+            "product_id" => $categories["product_id"],
+            "category_id" => $insert_category->id
+        ]);
     }
 }

@@ -31,7 +31,7 @@ class AuthController extends Controller
 
         $create_user = User::create($request->all());
         if (!$create_user) {
-            return \response()->json([
+            return response()->json([
                 'status' => \false,
                 'messgae' => 'any problem when insert data',
             ]);
@@ -45,42 +45,38 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-
         $payload = $request->all();
+        $check_user = User::where('email', $payload['email'])->first();
+        if (!$check_user) {
+            return responseJson('user tidak ditemukan', null, false, 404);
+        }
         if (Auth::attempt(['email' => $payload['email'], 'password' => $payload['password']])) {
+
             $success['token'] = $request->user()->createToken('token-name', ['server:update'])->plainTextToken;
             $success['uuid'] = $request->user()['uuid'];
             $success['user'] = $request->user()['name'];
             $success['email'] = $request->user()['email'];
-            return \response()->json([
-                'status' => \true,
-                'data' => $success
-            ])->setStatusCode(200);
+
+            return responseJson('berhasil login', $success);
         } else {
-            return \response()->json([
-                'status' => \false,
-                'data' => 'username or password not found',
-            ])->setStatusCode(404);
+            return responseJson('terjadi kesalahan', null, true, 500);
         }
     }
 
     public function logout(Request $request)
     {
-        // check any token ?
-        $check_header = $request->header('Authorization');
-        if ($check_header == \null) {
-            return \response()->json([
-                'status' => \false,
-                'message' => 'token not found'
-            ])->setStatusCode(500);
+        try {
+            $check_header = $request->header('Authorization');
+            if ($check_header == \null) {
+                return responseJson('anda belum login', null, false, 404);
+            }
+
+            $user = auth('sanctum')->user();
+            $user->tokens()->delete();
+
+            return responseJson("berhasil logout", null, true, 200);
+        } catch (\Throwable $th) {
+            return responseJson("terjadi kesalahan: {$th->getMessage()}", null, true, 200);
         }
-
-        $user = \auth('sanctum')->user();
-        $user->tokens()->delete();
-
-        return \response()->json([
-            'status' => \true,
-            'message' => 'token deleted'
-        ])->setStatusCode(500);
     }
 }

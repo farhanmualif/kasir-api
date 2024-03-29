@@ -16,7 +16,6 @@ class ProductSeeder extends Seeder
     {
         $products = [
             [
-                // "uuid" => Uuid::uuid4(),
                 "barcode" => "9898" . \rand(1, 20),
                 "name" => "shampo clear",
                 "stock" => 20,
@@ -25,8 +24,6 @@ class ProductSeeder extends Seeder
                 "image" => "product-default.png"
             ],
             [
-                // "uuid" => Uuid::uuid4(),
-                // "barcode" => "9898" . \rand(1, 20),
                 "name" => "sabun lifeboy",
                 "stock" => 20,
                 "selling_price" => 1500.0,
@@ -34,13 +31,11 @@ class ProductSeeder extends Seeder
                 "image" => "product-default.png"
             ],
             [
-                // "uuid" => Uuid::uuid4(),
                 "barcode" => "9898" . \rand(1, 20),
                 "name" => "aqua galon",
                 "stock" => 10,
-                "selling_price" => 1000.0,
-                "purchase_price" => 1500.0,
-                // "image" => "product-default.png"
+                "selling_price" => 20000.0,
+                "purchase_price" => 17000.0,
             ],
         ];
 
@@ -50,7 +45,7 @@ class ProductSeeder extends Seeder
             $total_payment = $insert_product->purchase_price * $insert_product->stock;
             echo $total_payment;
             Purchasing::create([
-                "no_purchasing" => \rand(1, 20),
+                "no_purchasing" => generateNoTransaction(),
                 "product_id" => $insert_product->id,
                 "quantity" => $insert_product->stock,
                 "description" => "pembelian $insert_product->name",

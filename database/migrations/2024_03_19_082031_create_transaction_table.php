@@ -14,9 +14,8 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->string('no_transaction', 21);
-            $table->decimal('total_payment');
             $table->decimal('cash');
-            $table->decimal('change');
+            $table->decimal('total_payment');
             $table->timestamps();
         });
     }

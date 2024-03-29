@@ -23,9 +23,9 @@ class DatabaseSeeder extends Seeder
         try {
             $this->call([
                 UserSeeder::class,
-                CategorySeeder::class,
                 ProductSeeder::class,
-                TransactionSeeder::class
+                TransactionSeeder::class,
+                CategorySeeder::class,
             ]);
             DB::commit();
         } catch (\Throwable $th) {

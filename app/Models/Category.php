@@ -10,5 +10,17 @@ class Category extends Model
 
     use HasFactory;
 
+    protected $fillable  = ["name", "uuid"];
+
     protected $table = 'categories';
+
+    /**
+     * The product that belong to the Category
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function product()
+    {
+        return $this->belongsToMany(Product::class, "product_category")->onDelete('cascade');
+    }
 }

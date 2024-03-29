@@ -15,11 +15,6 @@ class RequireHeader
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->header("Content-Type") != "application/json") {
-            return response()->json([
-                "message" => "header Content-Type must be application/json"
-            ]);
-        }
         if ($request->header("Accept") != "application/json") {
             return response()->json([
                 "message" => "header Accept must be application/json"

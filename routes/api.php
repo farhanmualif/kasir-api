@@ -1,12 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\RaportController;
 use App\Http\Controllers\TransactionController;
-use App\Http\Controllers\User\UserController;
-use App\Models\Product;
-use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,26 +18,21 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::post('register', [AuthController::class, 'register']);
+Route::post('login', [AuthController::class, 'login']);
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-
-
-// Route::middleware('auth:sanctum')->resource('users', [UserController::class]);
-
-
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//     try {
-//         return response()->json(User::all());
-//     } catch (\Throwable $th) {
-//         //throw $th;
-//         echo $th;
-//     }
-// });
-
-
-Route::middleware(['auth:sanctum', 'require_header'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('products', ProductController::class);
     Route::resource('transaction', TransactionController::class);
-    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::resource('category', CategoryController::class);
+    Route::post('logout', [AuthController::class, 'logout']);
+
+    Route::put('category-product/{uuid}', [CategoryController::class, 'updateProductCategory']);
+    Route::get('daily-transaction/{date}', [RaportController::class, 'getSalesPerday']);
+    Route::get('mountly-transaction/{date}', [RaportController::class, 'getSalesMonthly']);
+    Route::get('years-transaction/{date}', [RaportController::class, 'getSalesYears']);
+
+    Route::get('daily-purchases/{date}', [RaportController::class, 'getDailyPurchases']);
+    Route::get('monthly-purchases/{date}', [RaportController::class, 'getmonthlyPurchases']);
+    Route::get('years-purchases/{date}', [RaportController::class, 'getYearsPurchases']);
 });
