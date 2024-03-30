@@ -69,10 +69,10 @@ class ProductController extends Controller
     {
         try {
             $product = Product::where("uuid", $uuid)->first();
-            $product->link = \url()->current();
-            if (!$product) {
+            if ($product == null) {
                 return responseJson("produk tidak ditemukan", null, false, 404);
             }
+            $product->link = \url()->current();
             return responseJson("produk ditemukan", new ProductCollection($product));
         } catch (\Throwable $th) {
             return responseJson("get data failed {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()} {$th->getPrevious()}", null, false, 500);

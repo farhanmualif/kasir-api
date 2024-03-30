@@ -20,17 +20,6 @@ class TransactionController extends Controller
         return \responseJson("data transaksi ditemukan", TransactionCollection::collection(Transaction::all()), true);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(TransactionStoreRequest $request)
     {
         DB::beginTransaction();
@@ -53,7 +42,6 @@ class TransactionController extends Controller
                 "cash" => $transaction['cash'],
             ]);
 
-
             foreach ($transaction['items'] as $item) {
                 DetailTransaction::create([
                     "id_transaction" => $insert_transaction->id,
@@ -67,6 +55,8 @@ class TransactionController extends Controller
                 $product->stock = $product->stock - $item['quantity'];
                 $product->update();
             }
+
+            generateInvoice($insert_transaction->no_transaction);
 
 
             DB::commit();

@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Storage;
 
 class RaportController extends Controller
 {
@@ -325,5 +330,17 @@ class RaportController extends Controller
         } catch (\Throwable $th) {
             return responseJson("gagal menambil data pembelian {$th->getMessage()} {$th->getFile()} {$th->getLine()}");
         }
+    }
+
+    public function invoice(string $no_transaction)
+    {
+        $pdf_filename = 'invoice_' . $no_transaction . '.pdf';
+        $pdf_path = storage_path('app/public/' . $pdf_filename);
+
+        if (File::exists($pdf_path)) {
+            return Response::file($pdf_path);
+        }
+
+        return responseJson("file tidak ditemukan", null, false, 404);
     }
 }

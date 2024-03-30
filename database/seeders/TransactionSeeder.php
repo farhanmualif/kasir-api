@@ -16,43 +16,33 @@ class TransactionSeeder extends Seeder
      */
     public function run(): void
     {
-        $transactions = [];
-
-        for ($i = 1; $i <= 30; $i++) {
-
-            for ($j = 1; $j <= 30; $j++) {
-                $transaction = [
-                    "cash" => 10000,
-                    "created_at" => Carbon::create(2021, $i == $j ? $i + 1 : $i, $j),
-                    "items" => [
-                        (object)[
-                            "id_product" => 1,
-                            "name" => "shampo clear",
-                            "quantity" => 2,
-                            "item_price" => 1000.00
-                        ],
-                        (object)[
-                            "id_product" => 2,
-                            "name" => "sabun lifeboy",
-                            "quantity" => 2,
-                            "item_price" => 1500.00
-                        ],
+        $transactions = [
+            [
+                "cash" => 25000.00,
+                "created_at" => "2023-03-08 13:03:12",
+                "items" => [
+                    [
+                        "id_product" => 3,
+                        "name" => "sari roti",
+                        "quantity" => 1,
+                        "item_price" => 20000.00
                     ],
-                ];
-            }
-
-            $transactions[] = $transaction;
-        }
-
+                    [
+                        "id_product" => 2,
+                        "name" => "sabun colek",
+                        "quantity" => 3,
+                        "item_price" => 1500.00
+                    ]
+                ]
+            ]
+        ];
 
         foreach ($transactions as $transaction) {
             $total_payment = 0;
-            foreach ($transaction['items'] as $item) {
-                $total_price = $item->item_price * $item->quantity;
-                $total_payment += $total_price;
-            }
 
-            // dd($transaction);
+            foreach ($transaction['items'] as $item) {
+                $total_payment += ($item['quantity'] * $item['item_price']);
+            }
 
             $insert_transaction = Transaction::create([
                 "no_transaction" => generateNoTransaction(),
@@ -65,10 +55,10 @@ class TransactionSeeder extends Seeder
             foreach ($transaction['items'] as $item) {
                 DetailTransaction::create([
                     "id_transaction" => $insert_transaction->id,
-                    "id_product" => $item->id_product,
-                    "item_price" => $item->item_price,
-                    "total_price" => $item->item_price * $item->quantity,
-                    "quantity" => $item->quantity,
+                    "id_product" => $item['id_product'],
+                    "item_price" => $item['item_price'],
+                    "total_price" => $item['item_price'] * $item['quantity'],
+                    "quantity" => $item['quantity'],
                 ]);
             }
         }

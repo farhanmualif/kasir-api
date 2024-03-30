@@ -1,7 +1,12 @@
 <?php
 
-
+use App\Models\Transaction;
+use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
+use Barryvdh\DomPDF\PDF;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 if (!function_exists("generateNoTransaction")) {
     function generateNoTransaction()
@@ -21,47 +26,67 @@ if (!function_exists("responseJson")) {
         ])->setStatusCode($status_code);
     }
 }
+if (!function_exists("generateInvoice")) {
+    function generateInvoice(string $no_transaction)
+    {
+        try {
+            $transaction = DB::table('transactions')
+                ->join('detail_transactions', 'transactions.id', '=', 'detail_transactions.id_transaction')
+                ->join('products', 'detail_transactions.id_product', '=', 'products.id')
+                ->select(
+                    'transactions.no_transaction',
+                    'products.name',
+                    'detail_transactions.quantity',
+                    'detail_transactions.item_price',
+                    'detail_transactions.total_price',
+                    'transactions.total_payment',
+                    'transactions.cash',
+                    DB::raw('TIME(transactions.created_at) as time'),
+                    DB::raw('DATE(transactions.created_at) as date'),
+                )
+                ->where('transactions.no_transaction', '=', $no_transaction)
+                ->get();
 
 
 
-/**
- * {
-    "message": "data found",
-    "status": true,
-    "data": {
+            $total_price = 0;
+            foreach ($transaction as $item) {
+                $total_price += $item->total_price;
+            }
 
-        "0": {
-            "uuid": "84c5db8d-e8da-11ee-a4bb-0a0027000004",
-            "name": "shampo clear",
-            "barcode": "989814",
-            "stock": 20,
-            "selling_price": "1000.00",
-            "purchase_price": "500.00",
-            "image": "product-default.png",
-            "created_at": "2024-03-23T05:59:32.000000Z",
-            "updated_at": "2024-03-23T05:59:32.000000Z"
-        },
-        "1": {
-            "uuid": "84c670b2-e8da-11ee-a4bb-0a0027000004",
-            "name": "sabun lifeboy",
-            "barcode": null,
-            "stock": 20,
-            "selling_price": "1500.00",
-            "purchase_price": "1000.00",
-            "image": "product-default.png",
-            "created_at": "2024-03-23T05:59:32.000000Z",
-            "updated_at": "2024-03-23T05:59:32.000000Z"
-        },
-        "2": {
-            "uuid": "84c6d223-e8da-11ee-a4bb-0a0027000004",
-            "name": "aqua galon",
-            "barcode": "989810",
-            "stock": 10,
-            "selling_price": "1000.00",
-            "purchase_price": "1500.00",
-            "image": "product-default.png",
-            "created_at": "2024-03-23T05:59:32.000000Z",
-            "updated_at": "2024-03-23T05:59:32.000000Z"
-        },
+            $detail_transaction = [
+                'time' => $transaction->first()->time,
+                'date' => $transaction->first()->date,
+                'cash' => intval($transaction->first()->cash),
+                'change' => $transaction->first()->cash - $transaction->first()->total_price,
+                'total_price' => intval($total_price),
+                'total_payment' => intval($transaction->first()->total_payment),
+                'items' => []
+            ];
 
- **/
+            foreach ($transaction as $items) {
+                $detail_transaction['items'][] = [
+                    'name' => $items->name,
+                    'quantity' => $items->quantity,
+                    'item_price' => $items->item_price,
+                    'total_price' => $items->total_price
+                ];
+            }
+
+            // $pdf = App::make('dompdf.wrapper');
+            // $pdf->loadView('invoice', compact('detail_transaction'));
+            $pdf = FacadePdf::loadView('invoice', compact('detail_transaction'));
+            $pdf->setPaper([0, 0, 8 * 72, 14 * 72], 'portrait');
+            // Set lebar kertas menjadi 8cm
+
+            // Simpan file PDF ke storage
+            $pdf_filename = 'invoice_' . $no_transaction . '.pdf';
+            Storage::put('public/' . $pdf_filename, $pdf->output());
+
+            // Return the PDF file URL
+            return "berhasil menyimpan struk";
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+}

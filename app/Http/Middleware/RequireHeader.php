@@ -15,11 +15,11 @@ class RequireHeader
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->header("Accept") != "application/json") {
-            return response()->json([
-                "message" => "header Accept must be application/json"
-            ]);
-        }
+        // if ($request->header("Accept") != "application/json") {
+        //     return response()->json([
+        //         "message" => "header Accept must be application/json"
+        //     ]);
+        // }
         return $next($request);
     }
 }
