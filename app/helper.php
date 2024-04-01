@@ -81,12 +81,12 @@ if (!function_exists("generateInvoice")) {
 
             // Simpan file PDF ke storage
             $pdf_filename = 'invoice_' . $no_transaction . '.pdf';
-            Storage::put('public/' . $pdf_filename, $pdf->output());
+            Storage::put('public/invoices/' . $pdf_filename, $pdf->output());
 
             // Return the PDF file URL
             return "berhasil menyimpan struk";
         } catch (\Throwable $th) {
-            throw $th;
+            return responseJson("tidak dapat menampilkan struk", null, false, 500);
         }
     }
 }

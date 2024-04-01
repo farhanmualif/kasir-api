@@ -31,4 +31,21 @@ class ProductUpdateRequest extends FormRequest
             "description" => "nullable"
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'name.nullable' => 'Nama boleh dikosongkan.',
+            'name.max' => 'Nama tidak boleh lebih dari 100 karakter.',
+            'barcode.nullable' => 'Kode batang boleh dikosongkan.',
+            'barcode.max' => 'Kode batang tidak boleh lebih dari 15 karakter.',
+            'add_or_reduce_stock.required' => 'Penambahan atau pengurangan stok wajib dipilih.',
+            'quantity_stok.required' => 'Jumlah stok wajib diisi.',
+            'selling_price.required' => 'Harga jual wajib diisi.',
+            'selling_price.numeric' => 'Harga jual harus berupa angka.',
+            'purchase_price.required' => 'Harga beli wajib diisi.',
+            'purchase_price.numeric' => 'Harga beli harus berupa angka.',
+            'description.nullable' => 'Deskripsi boleh dikosongkan.',
+        ];
+    }
 }

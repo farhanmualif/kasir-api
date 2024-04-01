@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TransactionController extends Controller
 {
@@ -21,12 +22,21 @@ class TransactionController extends Controller
     }
 
     public function store(TransactionStoreRequest $request)
+
     {
         DB::beginTransaction();
         try {
             $payload = $request->validated();
             $transaction = $payload["transaction"];
             $total_payment = 0;
+
+            foreach ($transaction['items'] as $product) {
+                $check_product = Product::find($product['id_product']);
+                if ($check_product['stock'] <= 0) {
+                    return \responseJson("stock product {$check_product['name']} tidak tersedia");
+                }
+            }
+
 
             foreach ($transaction['items'] as $item) {
                 $total_payment += ($item['quantity'] * $item['item_price']);

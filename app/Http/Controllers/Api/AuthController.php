@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Laravel\Sanctum\Events\TokenAuthenticated;
 
 class AuthController extends Controller
 {
@@ -63,6 +64,18 @@ class AuthController extends Controller
         }
     }
 
+    public function checkAuth()
+    {
+        try {
+            $auth = auth('sanctum')->check();
+            if (!$auth) {
+                return \responseJson("uauthenticated", null, false, 400);
+            }
+            return \responseJson("authenticated", null);
+        } catch (\Throwable $th) {
+            return false;
+        }
+    }
     public function logout(Request $request)
     {
         try {

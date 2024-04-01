@@ -5,6 +5,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RaportController;
 use App\Http\Controllers\TransactionController;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,6 +21,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
+Route::get('check-auth',[AuthController::class,'checkAuth']);
+
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('products', ProductController::class);
@@ -36,4 +39,3 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('monthly-purchases/{date}', [RaportController::class, 'getmonthlyPurchases']);
     Route::get('years-purchases/{date}', [RaportController::class, 'getYearsPurchases']);
 });
-Route::get('invoice/{no_transaction}', [RaportController::class, 'invoice']);

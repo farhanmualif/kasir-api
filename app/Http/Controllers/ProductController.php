@@ -10,6 +10,8 @@ use App\Models\Purchasing;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Response;
 
 class ProductController extends Controller
 {
@@ -34,13 +36,19 @@ class ProductController extends Controller
             $file_name = "";
             $validated = $request->validated();
 
+
+
+            $file_name = '';
             if ($request->hasFile('image')) {
-                $file_name = time() . '.' . $request->image->extension();
-                $request->image->storeAs('images', $file_name);
+                $file_name = \time() . '.' . $request->image->extension();
+                $request->image->storeAs('public/images', $file_name);
                 $validated['image'] = $file_name;
             }
 
+            $validated['image'] = $file_name;
+
             $insert_product = Product::create($validated);
+
             Purchasing::create([
                 'no_purchasing' => generateNoTransaction(),
                 'product_id' => $insert_product->id,
@@ -48,6 +56,8 @@ class ProductController extends Controller
                 'description' => $insert_product->description,
                 'total_payment' => $insert_product->purchase_price * $insert_product->stock
             ]);
+
+
 
             // Simpan relasi dengan Category
             if ($validated['category_id'] != null) {

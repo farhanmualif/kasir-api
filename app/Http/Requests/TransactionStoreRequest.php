@@ -30,4 +30,21 @@ class TransactionStoreRequest extends FormRequest
             'transaction.items.*.item_price' => 'required|integer',
         ];
     }
+
+    /**
+     * Get the error messages for the defined validation rules.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'transaction.cash' => 'Field cash wajib diisi dan harus berupa angka.',
+            'transaction.items' => 'Field items wajib diisi dan harus berupa array.',
+            'transaction.items.*.id_product' => 'Field ID produk wajib diisi dan harus berupa angka.',
+            'transaction.items.*.name' => 'Field nama produk wajib diisi dan harus berupa string.',
+            'transaction.items.*.quantity' => 'Field jumlah produk wajib diisi dan harus berupa angka.',
+            'transaction.items.*.item_price' => 'Field harga produk wajib diisi dan harus berupa angka.',
+        ];
+    }
 }

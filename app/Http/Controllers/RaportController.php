@@ -331,16 +331,4 @@ class RaportController extends Controller
             return responseJson("gagal menambil data pembelian {$th->getMessage()} {$th->getFile()} {$th->getLine()}");
         }
     }
-
-    public function invoice(string $no_transaction)
-    {
-        $pdf_filename = 'invoice_' . $no_transaction . '.pdf';
-        $pdf_path = storage_path('app/public/' . $pdf_filename);
-
-        if (File::exists($pdf_path)) {
-            return Response::file($pdf_path);
-        }
-
-        return responseJson("file tidak ditemukan", null, false, 404);
-    }
 }
