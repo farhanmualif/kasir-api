@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class ProductUpdateRequest extends FormRequest
 {
@@ -47,5 +49,10 @@ class ProductUpdateRequest extends FormRequest
             'purchase_price.numeric' => 'Harga beli harus berupa angka.',
             'description.nullable' => 'Deskripsi boleh dikosongkan.',
         ];
+    }
+
+    public function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(\responseJson('Validation error', $validator->errors(), false, 422));
     }
 }

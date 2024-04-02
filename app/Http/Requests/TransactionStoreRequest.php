@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Contracts\Validation\Validator;
 
 class TransactionStoreRequest extends FormRequest
 {
@@ -46,5 +48,10 @@ class TransactionStoreRequest extends FormRequest
             'transaction.items.*.quantity' => 'Field jumlah produk wajib diisi dan harus berupa angka.',
             'transaction.items.*.item_price' => 'Field harga produk wajib diisi dan harus berupa angka.',
         ];
+    }
+
+    public function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(\responseJson('Validation error',$validator->errors(),false,422));
     }
 }
