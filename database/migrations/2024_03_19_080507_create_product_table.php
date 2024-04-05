@@ -20,7 +20,6 @@ return new class extends Migration
             $table->integer('stock');
             $table->decimal('selling_price');
             $table->decimal('purchase_price');
-            $table->string('image', 100)->default('product-default.png');
             $table->timestamps();
         });
     }

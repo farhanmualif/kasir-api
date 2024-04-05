@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
+use App\Http\Requests\UploadImageRequest;
 use App\Http\Resources\ProductCollection;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\Purchasing;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -33,19 +35,7 @@ class ProductController extends Controller
     {
         DB::beginTransaction();
         try {
-            $file_name = "";
             $validated = $request->validated();
-
-
-
-            $file_name = '';
-            if ($request->hasFile('image')) {
-                $file_name = \time() . '.' . $request->image->extension();
-                $request->image->storeAs('public/images', $file_name);
-                $validated['image'] = $file_name;
-            }
-
-            $validated['image'] = $file_name;
 
             $insert_product = Product::create($validated);
 
@@ -157,6 +147,29 @@ class ProductController extends Controller
             DB::rollBack();
             DB::commit();
             return responseJson("gagal menghapus data produk {$th->getMessage()}", null, false, 500);
+        }
+    }
+
+    public function uploadImage(UploadImageRequest $request)
+    {
+        try {
+            $request->validated();
+            $file_name = '';
+            if ($request->hasFile('image')) {
+
+                $file_name = \time() . '.' . $request->image->extension();
+                ProductImage::create([ 
+                    'product_id' => $request['product_id'],
+                    'image' => $file_name
+                ]);
+                $request->image->storeAs('public/images', $file_name);
+
+                return \responseJson("berhasil upload image", null, false, 200);
+            } else {
+                return \responseJson("gagal upload image", null, false, 500);
+            }
+        } catch (\Throwable $th) {
+            return \responseJson("{$th->getMessage()}", null, false, 500);
         }
     }
 }

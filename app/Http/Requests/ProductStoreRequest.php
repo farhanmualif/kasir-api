@@ -62,7 +62,7 @@ class ProductStoreRequest extends FormRequest
             'purchase_price.required' => 'Harga beli wajib diisi.',
             'purchase_price.numeric' => 'Harga beli harus berupa angka.',
 
-            'image.image' => 'File yang diunggah harus berekstensi jpeg, png, jpg, gif, atau svg.',
+            
             'image.max' => 'Ukuran file maksimum adalah 2048 kilobyte.',
 
             'category_id.numeric' => 'ID kategori harus berupa angka.',

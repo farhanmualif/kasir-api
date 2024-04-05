@@ -21,11 +21,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
-Route::get('check-auth',[AuthController::class,'checkAuth']);
+Route::get('check-auth', [AuthController::class, 'checkAuth']);
 
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('products', ProductController::class);
+    Route::post('product/upload', [ProductController::class, 'uploadImage']);
     Route::resource('transaction', TransactionController::class);
     Route::resource('category', CategoryController::class);
     Route::post('logout', [AuthController::class, 'logout']);

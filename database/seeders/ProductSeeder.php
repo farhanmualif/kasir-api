@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\Purchasing;
 use Illuminate\Database\Seeder;
 use Ramsey\Uuid\Uuid;
@@ -21,14 +22,14 @@ class ProductSeeder extends Seeder
                 "stock" => 20,
                 "selling_price" => 1000.0,
                 "purchase_price" => 500.0,
-                "image" => "product-default.png"
+
             ],
             [
                 "name" => "sabun lifeboy",
                 "stock" => 20,
                 "selling_price" => 1500.0,
                 "purchase_price" => 1000.0,
-                "image" => "product-default.png"
+
             ],
             [
                 "barcode" => "9898" . \rand(1, 20),
@@ -43,7 +44,10 @@ class ProductSeeder extends Seeder
         foreach ($products as $product) {
             $insert_product = Product::create($product);
             $total_payment = $insert_product->purchase_price * $insert_product->stock;
-            echo $total_payment;
+            ProductImage::create([
+                "product_id" => $insert_product->id,
+                "image" => 'product-default.png'
+            ]);
             Purchasing::create([
                 "no_purchasing" => generateNoTransaction(),
                 "product_id" => $insert_product->id,
