@@ -17,6 +17,7 @@ return new class extends Migration
             $table->uuid()->unique()->default(DB::raw('(UUID())'));
             $table->string('name', 100);
             $table->string('barcode', 15)->nullable()->unique();
+            $table->string('image')->default('product-default.png');
             $table->integer('stock');
             $table->decimal('selling_price');
             $table->decimal('purchase_price');

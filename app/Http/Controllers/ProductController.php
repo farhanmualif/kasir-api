@@ -4,16 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
-use App\Http\Requests\UploadImageRequest;
 use App\Http\Resources\ProductCollection;
 use App\Models\Product;
-use App\Models\ProductImage;
 use App\Models\Purchasing;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Response;
+
 
 class ProductController extends Controller
 {
@@ -23,10 +19,6 @@ class ProductController extends Controller
     public function index()
     {
         $datas = Product::all();
-        $datas = $datas->map(function ($product) {
-            $product->link = url()->current() . "/$product->uuid";
-            return $product;
-        });
 
         return responseJson("produk ditemukan", ProductCollection::collection($datas));
     }
@@ -47,7 +39,10 @@ class ProductController extends Controller
                 'total_payment' => $insert_product->purchase_price * $insert_product->stock
             ]);
 
-
+            if ($request->hasFile('image')) {
+                $file_name = \time() . '.' . $request->image->extension();
+                $request->image->storeAs('public/images', $file_name);
+            }
 
             // Simpan relasi dengan Category
             if ($validated['category_id'] != null) {
@@ -147,29 +142,6 @@ class ProductController extends Controller
             DB::rollBack();
             DB::commit();
             return responseJson("gagal menghapus data produk {$th->getMessage()}", null, false, 500);
-        }
-    }
-
-    public function uploadImage(UploadImageRequest $request)
-    {
-        try {
-            $request->validated();
-            $file_name = '';
-            if ($request->hasFile('image')) {
-
-                $file_name = \time() . '.' . $request->image->extension();
-                ProductImage::create([ 
-                    'product_id' => $request['product_id'],
-                    'image' => $file_name
-                ]);
-                $request->image->storeAs('public/images', $file_name);
-
-                return \responseJson("berhasil upload image", null, false, 200);
-            } else {
-                return \responseJson("gagal upload image", null, false, 500);
-            }
-        } catch (\Throwable $th) {
-            return \responseJson("{$th->getMessage()}", null, false, 500);
         }
     }
 }

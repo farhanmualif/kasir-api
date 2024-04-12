@@ -44,10 +44,7 @@ class ProductSeeder extends Seeder
         foreach ($products as $product) {
             $insert_product = Product::create($product);
             $total_payment = $insert_product->purchase_price * $insert_product->stock;
-            ProductImage::create([
-                "product_id" => $insert_product->id,
-                "image" => 'product-default.png'
-            ]);
+          
             Purchasing::create([
                 "no_purchasing" => generateNoTransaction(),
                 "product_id" => $insert_product->id,
