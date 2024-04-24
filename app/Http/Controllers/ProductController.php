@@ -19,6 +19,10 @@ class ProductController extends Controller
     public function index()
     {
         $datas = Product::all();
+        foreach ($datas as $data) {
+            $data['link'] = \url()->current() . '/' . $data->uuid;
+        }
+        // dd($datas);
 
         return responseJson("produk ditemukan", ProductCollection::collection($datas));
     }
@@ -29,6 +33,16 @@ class ProductController extends Controller
         try {
             $validated = $request->validated();
 
+            $file_name = "";
+
+            if ($request->hasFile('image')) {
+                $file_name = \time() . '.' . $request->image->extension();
+                $request->image->storeAs('public/images', $file_name);
+            } else {
+                $file_name = "product-default.png";
+            }
+
+            $validated['image'] = $file_name;
             $insert_product = Product::create($validated);
 
             Purchasing::create([
@@ -39,10 +53,7 @@ class ProductController extends Controller
                 'total_payment' => $insert_product->purchase_price * $insert_product->stock
             ]);
 
-            if ($request->hasFile('image')) {
-                $file_name = \time() . '.' . $request->image->extension();
-                $request->image->storeAs('public/images', $file_name);
-            }
+
 
             // Simpan relasi dengan Category
             if ($validated['category_id'] != null) {
@@ -67,7 +78,7 @@ class ProductController extends Controller
             if ($product == null) {
                 return responseJson("produk tidak ditemukan", null, false, 404);
             }
-            $product->link = \url()->current();
+
             return responseJson("produk ditemukan", new ProductCollection($product));
         } catch (\Throwable $th) {
             return responseJson("get data failed {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()} {$th->getPrevious()}", null, false, 500);

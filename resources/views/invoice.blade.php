@@ -1,97 +1,160 @@
 <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice</title>
+<html>
+  <head>
+    <title>Cetak Nota 123456789</title>
     <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .sheet {
+        max-width: 300px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+      }
+      .txt-left {
+        text-align: left;
+      }
+      @page {
+        margin: 0;
+      }
+      body {
+        margin: 0;
+        font-size: 10px;
+        font-family: monospace;
+      }
+      td {
+        font-size: 10px;
+      }
+      .sheet {
+        margin: 0;
+        overflow: hidden;
+        position: relative;
+        box-sizing: border-box;
+        page-break-after: always;
+      }
+
+      /** Paper sizes **/
+      body.struk .sheet {
+        width: 58mm;
+      }
+      body.struk .sheet {
+        padding: 2mm;
+      }
+
+      .txt-left {
+        text-align: left;
+      }
+      .txt-center {
+        text-align: center;
+      }
+      .txt-right {
+        text-align: right;
+      }
+
+      /** For screen preview **/
+      @media screen {
         body {
-            font-family: 'Merchant Copy';
-            font-size: 14px;
-            line-height: 1.5;
+          background: #e0e0e0;
+          font-family: monospace;
         }
-        .invoice {
-            max-width: 300px;
-            margin: 0 auto;
-            border: 1px solid #ccc;
-            padding: 20px;
+        .sheet {
+          background: white;
+          box-shadow: 0 0.5mm 2mm rgba(0, 0, 0, 0.3);
+          margin: 5mm;
         }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
+      }
+
+      /** Fix for Chrome issue #273306 **/
+      @media print {
+        body {
+          font-family: monospace;
         }
-        .date-supplier {
-            display: flex;
-            justify-content: space-between;
+        body.struk {
+          width: 58mm;
+          text-align: left;
         }
-        .items {
-            width: 100%;
-            border-collapse: collapse;
+        body.struk .sheet {
+          padding: 2mm;
         }
-        .items th, .items td {
-            padding: 8px;
-            text-align: left;
+        .txt-left {
+          text-align: left;
         }
-        .total {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
+        .txt-center {
+          text-align: center;
         }
+        .txt-right {
+          text-align: right;
+        }
+      }
     </style>
-</head>
-
-<body>
-    <div class="invoice">
-        <div class="header">
-
-            <p><h2>Toko Nay</h2> Ds. Muncang</p>
-        </div>
-        <table class="items">
-            <tr>
-                <th>{{ $detail_transaction['date'] }} <br> {{ $detail_transaction['time'] }}</th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th>supplier</th>
-            </tr>
-        </table>
-        <p>---------------------------------------------------------------</p>
-        <table class="items">
-            @foreach($detail_transaction['items'] as $detail)
-            <tr>
-                <td>{{ $detail['name'] }} <br> {{ $detail['quantity'] }} x {{ $detail['item_price'] }}</td>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <td>Rp. {{ $detail['quantity'] * $detail['item_price'] }}</td>
-            </tr>
-            @endforeach
-        </table>
-        <p>---------------------------------------------------------------</p>
-        <table class="items">
-            <tr>
-                <th>Subtotal <br> <span style="font-size:15px; text-align: right">Total</span> <br> Cash <br> Kembali</th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th>Rp. {{ $detail_transaction['total_price'] }} <br> <span style="font-size:15px">Rp. {{ $detail_transaction['total_price'] }}</span> <br>Rp. {{ $detail_transaction['cash'] }} <br>Rp. {{ $detail_transaction['change'] }}</th>
-            </tr>
-        </table>
-    </div>
-</body>
+  </head>
+  <body>
+    <section class="sheet">
+      <table cellpadding="0" cellspacing="0">
+        <tr>
+          <td>Toko Nay</td>
+        </tr>
+        <tr>
+          <td>Jl. Muncang Raya No. 123</td>
+        </tr>
+      </table>
+      <hr />
+      <table cellpadding="0" cellspacing="0" style="width: 100%">
+        <tr>
+          <td align="left" class="txt-left">No transaksi</td>
+          <td align="left" class="txt-left">:</td>
+          <td align="left" class="txt-left">&nbsp;{{ $detail_transaction['no_transaction'] }} .</td>
+        </tr>
+        <tr>
+          <td align="left" class="txt-left">Tgl.&nbsp;</td>
+          <td align="left" class="txt-left">:</td>
+          <td align="left" class="txt-left">&nbsp;{{ $detail_transaction['date'] }} {{ $detail_transaction['time'] }}</td>
+        </tr>
+        <tr>
+          <td align="left" colspan="3" class="txt-left">Suplier</td>
+        </tr>
+      </table>
+      <br />
+      <table cellpadding="0" cellspacing="0" style="width: 100%">
+        <tr>
+          <td align="left" class="txt-left">Item Qty Harga Total</td>
+        </tr>
+        <tr>
+          <td align="left" class="txt-left">
+            ========================================
+          </td>
+        </tr>
+        @foreach($detail_transaction['items'] as $detail)
+        <tr>
+          <td align="left" class="txt-left">{{ $detail['name'] }}</td>
+        </tr>
+        <tr>
+          <td class="txt-left" align="left">{{ $detail['quantity']}} x Rp. {{ $detail['item_price'] }} Rp. {{ $detail['quantity'] * $detail['item_price'] }}</td>
+        </tr>
+        @endforeach
+        <tr>
+          <td>----------------------------------------</td>
+        </tr>
+        <tr>
+          <td>Sub&nbsp;Total Rp. {{ $detail_transaction['total_price'] }}</td>
+        </tr>
+        <tr>
+          <td>BAYAR Rp. {{ $detail_transaction['cash'] }}</td>
+        </tr>
+        <tr>
+          <td>KEMBALI Rp. {{ $detail_transaction['change'] }}</td>
+        </tr>
+        <tr>
+          <td>&nbsp;</td>
+        </tr>
+      </table>
+      <p>*****&nbsp;Terima kasih atas kunjungan anda&nbsp;*****</p>
+      <br /><br /><br /><br />
+      <p>&nbsp;</p>
+    </section>
+  </body>
 
 </html>

@@ -4,12 +4,7 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Request;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Storage;
+
 
 class RaportController extends Controller
 {
@@ -102,6 +97,7 @@ class RaportController extends Controller
                 ->select(
                     DB::raw('MONTHNAME(transactions.created_at) AS month'),
                     DB::raw('YEAR(transactions.created_at) AS year'),
+                    DB::raw('COUNT(transactions.id) AS transaction_amount'),
                     DB::raw('MONTH(transactions.created_at) AS month_number'),
                     DB::raw('DAY(transactions.created_at) AS day'),
                     DB::raw('COUNT(*) as total_transaction'),
@@ -113,9 +109,6 @@ class RaportController extends Controller
             if ($salesData->count() === 0) {
                 return responseJson("data penjulaan tidak ditemukan", null, false, 404);
             }
-
-
-
             // format the data
             $data = [
                 'link' => \url()->current(),
@@ -123,14 +116,17 @@ class RaportController extends Controller
                 'total_revenue' => $salesData->sum('revenue'),
                 'total_profit' => $salesData->sum('profit'),
                 'month' => $salesData->first()->month,
+                'month_number' => $salesData->first()->month_number,
+                'year' => $salesData->first()->year,
                 'transactions' => [],
             ];
 
             foreach ($salesData as $sale) {
                 $data['transactions'][] = [
                     'link' => \url()->previous() . "/api/daily-transaction/{$sale->year}-{$sale->month_number}-{$sale->day}",
-                    'date' => "{$sale->month} {$sale->day}",
+                    'date' => "$sale->day",
                     'revenue' => $sale->revenue,
+                    'transaction_amount' => $sale->transaction_amount,
                     'profit' => $sale->profit,
                 ];
             }
@@ -140,6 +136,8 @@ class RaportController extends Controller
             return responseJson("gagal menambil data penjualan {$th->getMessage()} {$th->getFile()} {$th->getLine()}");
         }
     }
+
+
     public function getSalesYears($date)
     {
         try {
@@ -180,6 +178,7 @@ class RaportController extends Controller
                 $data['transactions'][] = [
                     'link' => \url()->previous() . "/api/mountly-transaction/{$sale->year}-{$sale->month_number}",
                     'date' => $sale->month,
+                    'month_num' => $sale->month_number,
                     'revenue' => $sale->revenue,
                     'profit' => $sale->profit,
                 ];
@@ -295,8 +294,9 @@ class RaportController extends Controller
             $date = "$date[0]";
             $date = Carbon::createFromFormat("Y", $date);
 
+
             $yearData = DB::table('purchasing')
-                ->whereYear('created_at', '=', '2024') // Ganti '2024' dengan tahun yang diinginkan
+                ->whereYear('created_at', '=', $date) // Ganti '2024' dengan tahun yang diinginkan
                 ->select(
                     DB::raw('COUNT(*) AS total_transaction'),
                     DB::raw('SUM(total_payment) AS total_expendeture')
@@ -304,7 +304,7 @@ class RaportController extends Controller
                 ->first();
 
             $monthlyData = DB::table('purchasing')
-                ->whereYear('created_at', '=', '2024') // Ganti '2024' dengan tahun yang diinginkan
+                ->whereYear('created_at', '=', $date) // Ganti '2024' dengan tahun yang diinginkan
                 ->select(
                     DB::raw('MONTH(created_at) AS month'),
                     DB::raw('YEAR(created_at) AS year'),
@@ -313,7 +313,6 @@ class RaportController extends Controller
                 )
                 ->groupBy(DB::raw('MONTH(created_at)'), 'year')
                 ->get();
-            // dd($monthlyData);
 
             foreach ($monthlyData as $data) {
                 $data->link = url('/api/mounth-purchases/' . $data->year . '-' . $data->month);
