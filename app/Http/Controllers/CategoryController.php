@@ -16,7 +16,20 @@ class CategoryController extends Controller
     public function index()
     {
         try {
-            $category = Category::all();
+            $category = DB::table('categories')
+                ->join('product_category', 'categories.id', '=', 'product_category.category_id')
+                ->join('products', 'product_category.product_id', '=', 'products.id')
+                ->select(
+                    'categories.id as id',
+                    'categories.uuid as uuid',
+                    'categories.name as name',
+                    DB::raw('SUM(products.purchase_price) as capital'),
+                    DB::raw(
+                        'COUNT(products.id) as remaining_stock'
+                    )
+                )
+                ->groupBy('categories.id', 'categories.name')
+                ->get();
             return \responseJson("kategori berhasil di temukan", $category);
         } catch (\Throwable $th) {
             return \responseJson("terjadi kesalahan {$th->getMessage()}", null, false, 500);
