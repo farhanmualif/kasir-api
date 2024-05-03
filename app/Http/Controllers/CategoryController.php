@@ -16,21 +16,21 @@ class CategoryController extends Controller
     public function index()
     {
         try {
-            $category = DB::table('categories')
-                ->join('product_category', 'categories.id', '=', 'product_category.category_id')
-                ->join('products', 'product_category.product_id', '=', 'products.id')
+            $categories = DB::table('categories')
                 ->select(
                     'categories.id as id',
                     'categories.uuid as uuid',
                     'categories.name as name',
-                    DB::raw('SUM(products.purchase_price) as capital'),
-                    DB::raw(
-                        'COUNT(products.id) as remaining_stock'
-                    )
+                    'categories.created_at',
+                    'categories.updated_at',
+                    DB::raw('COALESCE(SUM(products.purchase_price), 0) as capital'),
+                    DB::raw('COALESCE(COUNT(products.id), 0) as remaining_stock')
                 )
+                ->leftJoin('product_category', 'categories.id', '=', 'product_category.category_id')
+                ->leftJoin('products', 'product_category.product_id', '=', 'products.id')
                 ->groupBy('categories.id', 'categories.name')
                 ->get();
-            return \responseJson("kategori berhasil di temukan", $category);
+            return \responseJson("kategori berhasil di temukan", $categories);
         } catch (\Throwable $th) {
             return \responseJson("terjadi kesalahan {$th->getMessage()}", null, false, 500);
         }
