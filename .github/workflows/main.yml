@@ -2,7 +2,7 @@ on:
   push:
     branches:
       - master
-name: 🚀 Deploy website on push
+name: 🚀 CI/CD Deploy C-Pannel
 
 jobs:
   web-deploy:
