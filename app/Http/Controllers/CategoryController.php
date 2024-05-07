@@ -23,13 +23,14 @@ class CategoryController extends Controller
                     'categories.name as name',
                     'categories.created_at',
                     'categories.updated_at',
-                    DB::raw('COALESCE(SUM(products.purchase_price), 0) as capital'),
-                    DB::raw('COALESCE(COUNT(products.id), 0) as remaining_stock')
+                    DB::raw('COALESCE(SUM(products.purchase_price * products.stock), 0) as capital'),
+                    DB::raw('CAST(COALESCE(SUM(products.stock), 0) AS SIGNED) as remaining_stock')
                 )
                 ->leftJoin('product_category', 'categories.id', '=', 'product_category.category_id')
                 ->leftJoin('products', 'product_category.product_id', '=', 'products.id')
                 ->groupBy('categories.id', 'categories.name')
                 ->get();
+
             return \responseJson("kategori berhasil di temukan", $categories);
         } catch (\Throwable $th) {
             return \responseJson("terjadi kesalahan {$th->getMessage()}", null, false, 500);
