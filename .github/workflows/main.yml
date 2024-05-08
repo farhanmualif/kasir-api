@@ -1,24 +1,42 @@
-name: Push-to-EC2
+name: Deploy Laravel Project
 
-# Trigger deployment only on push to master branch
 on:
   push:
     branches:
-      - master
+      - master  # Atur branch yang ingin di-deploy, misalnya master
 
 jobs:
   deploy:
-    name: Deploy to EC2 on master branch push
+    name: Deploy to EC2
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout the files
+      - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Deploy to EC2
-        uses: easingthemes/ssh-deploy@main
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.HOST_DNS }}
-          REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: ${{ secrets.TARGET_DIR }}
+      - name: Install PHP and Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'  # Sesuaikan versi PHP yang digunakan
+
+      - name: Install Composer Dependencies
+        run: |
+          cd /var/www/kasir-api
+          composer install --optimize-autoloader --no-dev
+
+      - name: Set Permissions
+        run: |
+          sudo chown -R www-data:www-data storage bootstrap/cache
+          sudo chmod -R 775 storage bootstrap/cache
+
+      - name: Run Database Migrations
+        run: php /var/www/kasir-api/artisan migrate --force
+
+      - name: Clear Cache and Config
+        run: |
+          php /var/www/kasir-api/artisan cache:clear
+          php /var/www/kasir-api/artisan config:cache
+          php /var/www/kasir-api/artisan route:cache
+
+      - name: Restart Nginx
+        run: sudo systemctl restart nginx
