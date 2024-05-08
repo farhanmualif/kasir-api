@@ -1,21 +1,24 @@
+name: Push-to-EC2
+
+# Trigger deployment only on push to master branch
 on:
   push:
     branches:
-      - master
-name: 🚀 CI/CD Deploy C-Pannel
+      - main
 
 jobs:
-  web-deploy:
-    name: 🎉 Deploy website
+  deploy:
+    name: Deploy to EC2 on master branch push
     runs-on: ubuntu-latest
+
     steps:
-      # Checkout the repository
-      - name: 🚚 Get latest code
-        uses: actions/checkout@v4
-      # sync files via FTP
-      - name: 📂 Sync files via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+      - name: Checkout the files
+        uses: actions/checkout@v2
+
+      - name: Deploy to EC2
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.HOST_DNS }}
+          REMOTE_USER: ${{ secrets.USERNAME }}
+          TARGET: ${{ secrets.TARGET_DIR }}
