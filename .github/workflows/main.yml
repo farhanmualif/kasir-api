@@ -3,7 +3,7 @@ name: Deploy Laravel Project
 on:
   push:
     branches:
-      - master  # Atur branch yang ingin di-deploy, misalnya master
+      - master # Atur branch yang ingin di-deploy, misalnya master
 
 jobs:
   deploy:
@@ -17,11 +17,11 @@ jobs:
       - name: Install PHP and Composer
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '7.4'  # Sesuaikan versi PHP yang digunakan
+          php-version: "8.1" # Sesuaikan versi PHP yang digunakan
 
       - name: Install Composer Dependencies
         run: |
-          cd /var/www/kasir-api
+          cd /var/www/kasir-api/
           composer install --optimize-autoloader --no-dev
 
       - name: Set Permissions
