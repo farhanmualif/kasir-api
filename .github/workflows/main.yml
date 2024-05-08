@@ -1,42 +1,27 @@
-name: Deploy Laravel Project
+name: Deploy
 
+# Trigger the workflow on push and
+# pull request events on the production branch
 on:
   push:
     branches:
-      - master # Atur branch yang ingin di-deploy, misalnya master
+      - master
+  pull_request:
+    branches:
+      - master
 
+# Authenticate to the the server via ssh
+# and run our deployment script
 jobs:
   deploy:
-    name: Deploy to EC2
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-
-      - name: Install PHP and Composer
-        uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@v2
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
         with:
-          php-version: "8.1" # Sesuaikan versi PHP yang digunakan
-
-      - name: Install Composer Dependencies
-        run: |
-          cd /var/www/kasir-api/
-          composer install --optimize-autoloader --no-dev
-
-      - name: Set Permissions
-        run: |
-          sudo chown -R www-data:www-data storage bootstrap/cache
-          sudo chmod -R 775 storage bootstrap/cache
-
-      - name: Run Database Migrations
-        run: php /var/www/kasir-api/artisan migrate --force
-
-      - name: Clear Cache and Config
-        run: |
-          php /var/www/kasir-api/artisan cache:clear
-          php /var/www/kasir-api/artisan config:cache
-          php /var/www/kasir-api/artisan route:cache
-
-      - name: Restart Nginx
-        run: sudo systemctl restart nginx
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ${{ secrets.USERNAME }}
+          port: 80
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: "cd /var/www/kasir-api && ./.scripts/deploy.sh"
