@@ -17,21 +17,23 @@ jobs:
       - name: Install Dependencies
         run: |
           composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+          composer update
           npm ci
           npm run build
 
-      - name: Deploy to EC2
-        env:
-          HOST_DSN: ${{ secrets.HOST_DNS }}
-          USER_NAME: ${{ secrets.USERNAME }}
-          USER_PASSWORD: ${{ secrets.EC2_SSH_KEY }}
-        run: |
-          scp -r -o StrictHostKeyChecking=no ./public ./vendor ./storage ./artisan ${{ secrets.USERNAME }}@${{ secrets.HOST_DNS }}:/var/www/kasir-api
-          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST_DNS }} "
-            cd /var/www/kasir-api &&
-            sudo chown -R www-data:www-data . &&
-            sudo chmod -R 755 storage &&
-            php artisan migrate --force &&
-            php artisan config:cache &&
-            php artisan route:cache
-          "
+          - name: Deploy to EC2
+          env:
+            HOST_DSN: ${{ secrets.HOST_DNS }}
+            USER_NAME: ${{ secrets.USERNAME }}
+            USER_PASSWORD: ${{ secrets.EC2_SSH_KEY }}
+          run: |
+            scp -r -o StrictHostKeyChecking=no ./public ./vendor ./storage ./artisan ${{ secrets.USERNAME }}@${{ secrets.HOST_DNS }}:/var/www/kasir-api
+            ssh ${{ secrets.USERNAME }}@${{ secrets.HOST_DNS }} "
+              cd /var/www/kasir-api &&
+              sudo chown -R www-data:www-data . &&
+              sudo chmod -R 755 storage &&
+              composer update --no-scripts &&
+              php artisan migrate --force &&
+              php artisan config:cache &&
+              php artisan route:cache
+            " "
