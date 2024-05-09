@@ -30,7 +30,7 @@ jobs:
 
       - name: Set Permission
         run: |
-          ssh ${{secrets.USERNAME}}@${{ secrets.EC2_PUBLIC_IP }}"
+          ssh ${{secrets.USERNAME}}@${{ secrets.HOST_DNS }}"
             sudo chown -R www-data:www-data /var/www/api-kasir/storage
             sudo chmod -R 775 /var/www/api-kasir/storage
             sudo chown -R www-data:www-data /var/www/api-kasir/storage/logs
