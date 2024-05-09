@@ -30,9 +30,9 @@ jobs:
 
       - name: Set Permission
         run: |
-          ssh ubuntu@ec2-54-79-105-137.ap-southeast-2.compute.amazonaws.com"
-            sudo chown -R www-data:www-data /var/www/api-kasir/storage
-            sudo chmod -R 775 /var/www/api-kasir/storage
-            sudo chown -R www-data:www-data /var/www/api-kasir/storage/logs
-            sudo chmod -R 775 /var/www/api-kasir/storage/logs
+          ssh -o StrictHostKeyChecking=no -i "${{ secrets.EC2_SSH_KEY }}" ubuntu@ec2-54-79-105-137.ap-southeast-2.compute.amazonaws.com "
+            sudo chown -R www-data:www-data /var/www/kasir-api/storage
+            sudo chmod -R 775 /var/www/kasir-api/storage
+            sudo chown -R www-data:www-data /var/www/kasir-api/storage/logs
+            sudo chmod -R 775 /var/www/kasir-api/storage/logs
             sudo systemctl restart nginx "
