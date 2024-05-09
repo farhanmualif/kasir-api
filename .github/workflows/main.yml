@@ -47,5 +47,7 @@ jobs:
             git pull origin master
             composer install --no-dev
             php artisan migrate --force
+            sudo chown -R www-data.www-data /var/www/kasir-api/storage
+            sudo chown -R www-data.www-data /var/www/kasir-api/bootstrap/cache
             sudo systemctl restart nginx
           EOF
