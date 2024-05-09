@@ -22,7 +22,7 @@ jobs:
 
       - name: Set Permissions and Restart Nginx
         run: |
-          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST_DNS }} "
+          ssh ubuntu@ec2-54-79-105-137.ap-southeast-2.compute.amazonaws.com "
             sudo chown -R www-data:www-data /var/www/kasir-api/storage
             sudo chmod -R 775 /var/www/kasir-api/storage
             sudo chown -R www-data:www-data /var/www/kasir-api/storage/logs
