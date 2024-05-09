@@ -24,8 +24,8 @@ jobs:
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST_DNS }} "
             sudo chown -R www-data:www-data /var/www/kasir-api/storage
-            sudo chmod -R 775 /var/www/api-kasir/storage
+            sudo chmod -R 775 /var/www/kasir-api/storage
             sudo chown -R www-data:www-data /var/www/kasir-api/storage/logs
-            sudo chmod -R 775 /var/www/api-kasir/storage/logs
+            sudo chmod -R 775 /var/www/kasir-api/storage/logs
             sudo systemctl restart nginx
           "
