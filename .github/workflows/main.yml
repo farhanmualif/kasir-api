@@ -23,3 +23,12 @@ jobs:
           REMOTE_HOST: ${{ secrets.HOST_DNS }}
           REMOTE_USER: ${{ secrets.USERNAME }}
           TARGET: ${{ secrets.TARGET_DIR }}
+
+      - name: Set Permission
+        run: |
+          ssh ${REMOTE_USER}@${REMOTE_HOST} "
+            sudo chown -R www-data:www-data ${TARGET}/storage
+            sudo chmod -R 775 ${TARGET}/storage
+            sudo chown -R www-data:www-data ${TARGET}/storage/logs
+            sudo chmod -R 775 ${TARGET}/storage/logs
+            sudo systemctl restart nginx "
