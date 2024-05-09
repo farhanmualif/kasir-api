@@ -1,25 +1,51 @@
-name: Push-to-EC2
+name: Laravel CI/CD
 
-# Trigger deployment only on push to master branch
 on:
   push:
-    branches:
-      - master
+    branches: [master]
 
 jobs:
-  deploy:
-    name: Deploy to EC2 on master branch push
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout the files
+      - uses: actions/checkout@v2
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.0"
+          extensions: mbstring, pdo_mysql
+          coverage: none
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: Run tests
+        run: ./vendor/bin/phpunit
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Deploy to EC2
-        uses: easingthemes/ssh-deploy@main
-
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.3
         with:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.HOST_DNS }}
-          REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: ${{ secrets.TARGET_DIR }}
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Deploy to AWS
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_PUBLIC_IP }} <<EOF
+            cd /var/www/kasir-api
+            git pull origin master
+            composer install --no-dev
+            php artisan migrate --force
+            sudo systemctl restart nginx
+          EOF
