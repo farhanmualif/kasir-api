@@ -15,24 +15,17 @@ jobs:
       - name: Checkout the files
         uses: actions/checkout@v2
 
-      - name: Deploy to EC2
-        uses: easingthemes/ssh-deploy@main
-
-        with:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.HOST_DNS }}
-          REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: ${{ secrets.TARGET_DIR }}
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Set Permission
+      - name: Set Permissions and Restart Nginx
         run: |
-          ssh ${{secrets.USERNAME}}@${{ secrets.HOST_DNS }}"
-            sudo chown -R www-data:www-data /var/www/api-kasir/storage
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST_DNS }} "
+            sudo chown -R www-data:www-data /var/www/kasir-api/storage
             sudo chmod -R 775 /var/www/api-kasir/storage
-            sudo chown -R www-data:www-data /var/www/api-kasir/storage/logs
+            sudo chown -R www-data:www-data /var/www/kasir-api/storage/logs
             sudo chmod -R 775 /var/www/api-kasir/storage/logs
-            sudo systemctl restart nginx "
+            sudo systemctl restart nginx
+          "
