@@ -9,7 +9,6 @@ use App\Models\Product;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class TransactionController extends Controller
 {
@@ -66,11 +65,11 @@ class TransactionController extends Controller
                 $product->update();
             }
 
-            generateInvoice($insert_transaction->no_transaction);
+            $resGenerate =  generateInvoice($insert_transaction->no_transaction);
 
 
             DB::commit();
-            return responseJson("berhasil menambahkan data transaksi", new TransactionCollection($insert_transaction));
+            return responseJson($resGenerate + " berhasil menambahkan data transaksi", new TransactionCollection($insert_transaction));
         } catch (\Throwable $th) {
             DB::rollBack();
             return responseJson("gagal menambahkan data transaksi, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);

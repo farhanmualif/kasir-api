@@ -59,7 +59,7 @@ if (!function_exists("generateInvoice")) {
                 'time' => $transaction->first()->time,
                 'date' => $transaction->first()->date,
                 'cash' => intval($transaction->first()->cash),
-                'change' => $transaction->first()->cash - $transaction->first()->total_price,
+                'change' => $transaction->first()->cash - $total_price,
                 'total_price' => intval($total_price),
                 'total_payment' => intval($transaction->first()->total_payment),
                 'items' => []
@@ -76,11 +76,14 @@ if (!function_exists("generateInvoice")) {
 
             // $pdf = App::make('dompdf.wrapper');
             // $pdf->loadView('invoice', compact('detail_transaction'));
+
             $pdf = FacadePdf::loadView('invoice', compact('detail_transaction'));
             $pdf->setPaper('A4', 'portrait');
+
             // Set lebar kertas menjadi 8cm
             // Simpan file PDF ke storage
             $pdf_filename = 'invoice_' . $no_transaction . '.pdf';
+
             Storage::put('public/invoices/' . $pdf_filename, $pdf->output());
 
             // Return the PDF file URL
