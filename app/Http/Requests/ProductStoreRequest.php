@@ -29,7 +29,7 @@ class ProductStoreRequest extends FormRequest
             "stock" =>  'required|max:100|numeric',
             "selling_price" =>  'required|numeric',
             "purchase_price" =>  'required|numeric',
-            "image" =>  'image:jpeg,png,jpg,gif,svg|max:2048',
+            "image" =>  'image:jpeg,png,jpg,gif,svg|max:10240|min:2000',
             "category_id" => 'numeric|nullable',
             "description" => 'nullable|max:200',
         ];
@@ -62,7 +62,7 @@ class ProductStoreRequest extends FormRequest
             'purchase_price.required' => 'Harga beli wajib diisi.',
             'purchase_price.numeric' => 'Harga beli harus berupa angka.',
 
-            
+
             'image.max' => 'Ukuran file maksimum adalah 2048 kilobyte.',
 
             'category_id.numeric' => 'ID kategori harus berupa angka.',
