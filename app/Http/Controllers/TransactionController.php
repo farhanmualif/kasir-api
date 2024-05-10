@@ -69,7 +69,7 @@ class TransactionController extends Controller
 
 
             DB::commit();
-            return responseJson($resGenerate + " berhasil menambahkan data transaksi", new TransactionCollection($insert_transaction));
+            return responseJson("$resGenerate && berhasil menambahkan data transaksi", new TransactionCollection($insert_transaction));
         } catch (\Throwable $th) {
             DB::rollBack();
             return responseJson("gagal menambahkan data transaksi, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
