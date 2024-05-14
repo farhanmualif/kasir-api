@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Response;
 
 class TransactionController extends Controller
 {
@@ -23,37 +24,50 @@ class TransactionController extends Controller
     public function store(TransactionStoreRequest $request)
 
     {
+
         DB::beginTransaction();
         try {
             $payload = $request->validated();
             $transaction = $payload["transaction"];
-            $total_payment = 0;
+            $totalPayment = 0;
 
             foreach ($transaction['items'] as $product) {
-                $check_product = Product::find($product['id_product']);
-                if ($check_product['stock'] <= 0) {
-                    return \responseJson("stock product {$check_product['name']} tidak tersedia");
+
+                $findProduct = Product::find($product['id_product']);
+                if (!$findProduct) {
+                    return responseJson("produk tidak tersedia", null, false, Response::HTTP_BAD_REQUEST);
+                }
+
+                $currentStock = $findProduct->stock;
+
+                if ($currentStock <= 0) {
+                    return responseJson("stock product {$findProduct->name} tidak tersedia", null, false, Response::HTTP_BAD_REQUEST);
+                }
+
+                if (($currentStock - $product['quantity']) <= 1) {
+                    return responseJson("stok produk tidak mencukupi", null, false, Response::HTTP_BAD_REQUEST);
                 }
             }
 
-
             foreach ($transaction['items'] as $item) {
-                $total_payment += ($item['quantity'] * $item['item_price']);
+                $totalPayment += ($item['quantity'] * $item['item_price']);
             }
 
-            if ($payload['transaction']['cash'] < $total_payment) {
-                return responseJson("gagal menambahkan data transaction, cash kurang dari total transaction", null, false, 500);
+            if ($transaction['cash'] < $totalPayment) {
+                return responseJson("gagal menambahkan data transaction, cash kurang dari total transaction", null, false, Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
-            $insert_transaction = Transaction::create([
+            DB::beginTransaction();
+
+            $insertTransaction = Transaction::create([
                 "no_transaction" => generateNoTransaction(),
-                "total_payment" => $total_payment,
+                "total_payment" => $totalPayment,
                 "cash" => $transaction['cash'],
             ]);
 
             foreach ($transaction['items'] as $item) {
                 DetailTransaction::create([
-                    "id_transaction" => $insert_transaction->id,
+                    "id_transaction" => $insertTransaction->id,
                     "id_product" => $item['id_product'],
                     "item_price" => $item["item_price"],
                     "quantity" => $item['quantity'],
@@ -62,17 +76,17 @@ class TransactionController extends Controller
 
                 $product = Product::where('id', $item['id_product'])->first();
                 $product->stock = $product->stock - $item['quantity'];
-                $product->update();
+                $product->save();
             }
 
-            $resGenerate =  generateInvoice($insert_transaction->no_transaction);
-
+            $resGenerate = generateInvoice($insertTransaction->no_transaction);
 
             DB::commit();
-            return responseJson("$resGenerate && berhasil menambahkan data transaksi", new TransactionCollection($insert_transaction));
+
+            return responseJson("$resGenerate && berhasil menambahkan data transaksi", new TransactionCollection($insertTransaction), Response::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();
-            return responseJson("gagal menambahkan data transaksi, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
+            return responseJson("gagal menambahkan data transaksi, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -43,6 +43,7 @@ class ProductController extends Controller
             }
 
             $validated['image'] = $file_name;
+            \dd($validated);
             $insert_product = Product::create($validated);
 
             Purchasing::create([

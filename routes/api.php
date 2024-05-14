@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\BarcodeController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RaportController;
@@ -28,6 +29,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('product/upload', [ProductController::class, 'uploadImage']);
     Route::resource('transaction', TransactionController::class);
     Route::resource('category', CategoryController::class);
+    Route::resource('barcode', BarcodeController::class);
+
     Route::post('logout', [AuthController::class, 'logout']);
 
     Route::put('category-product/{uuid}', [CategoryController::class, 'updateProductCategory']);
