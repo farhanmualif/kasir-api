@@ -44,7 +44,7 @@ class TransactionController extends Controller
                     return responseJson("stock product {$findProduct->name} tidak tersedia", null, false, Response::HTTP_BAD_REQUEST);
                 }
 
-                if (($currentStock - $product['quantity']) <= 1) {
+                if (($currentStock - $product['quantity']) < 1) {
                     return responseJson("stok produk tidak mencukupi", null, false, Response::HTTP_BAD_REQUEST);
                 }
             }
