@@ -25,6 +25,7 @@ class ProductSeeder extends Seeder
 
             ],
             [
+                "barcode" => "9898" . \rand(1, 20),
                 "name" => "sabun lifeboy",
                 "stock" => 20,
                 "selling_price" => 1500.0,
@@ -44,7 +45,7 @@ class ProductSeeder extends Seeder
         foreach ($products as $product) {
             $insert_product = Product::create($product);
             $total_payment = $insert_product->purchase_price * $insert_product->stock;
-          
+
             Purchasing::create([
                 "no_purchasing" => generateNoTransaction(),
                 "product_id" => $insert_product->id,

@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string("description", 200)->nullable();
             $table->decimal("total_payment");
             $table->timestamps();
+
+            $table->foreign('product_id')->references('id')->on('products');
         });
     }
 
