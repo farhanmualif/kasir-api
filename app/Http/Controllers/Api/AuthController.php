@@ -3,45 +3,50 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreStoreRequest;
+use App\Models\Store;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
-use Laravel\Sanctum\Events\TokenAuthenticated;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Ramsey\Uuid\Uuid;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
+    public function store(StoreStoreRequest $request)
     {
-        $payload = $request->all();
+        DB::beginTransaction();
 
-        $validate = Validator::make($payload, [
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required',
-            'confirm_password' => 'required|same:password'
-        ]);
+        try {
+            $validated = $request->validated();
+            $validated['password'] = Hash::make($validated['password']);
+            $userCreated = User::create($validated);
+            $validated['uuid'] = Uuid::uuid4();
+            // dd($userCreated->name);
 
-        if ($validate->fails()) {
-            return \response()->json([
-                'status' => \false,
-                'messgae' => $validate->errors(),
-            ])->setStatusCode(300);
-        }
-        $payload['password'] = \bcrypt($payload['password']);
-
-        $create_user = User::create($request->all());
-        if (!$create_user) {
-            return response()->json([
-                'status' => \false,
-                'messgae' => 'any problem when insert data',
+            // Membuat store secara otomatis
+            $storeCreated = Store::create([
+                'uuid' => Uuid::uuid4(),
+                'name' => $userCreated->name . '_store',
+                'address' => $validated['address'],
             ]);
-        }
 
-        return \response()->json([
-            'status' => \true,
-            'data' => $create_user
-        ])->setStatusCode(200);
+            // Menyimpan relasi antara user dengan store
+            DB::insert("INSERT INTO user_store (user_id, store_id) VALUES (?, ?)", [$userCreated->id, $storeCreated->id]);
+
+            DB::commit();
+
+            $data = [
+                'user' => $userCreated,
+                'store' => $storeCreated,
+            ];
+
+            return responseJson("Berhasil mendaftarkan toko", $data);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return responseJson("Gagal mendaftarkan toko, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
+        }
     }
 
     public function login(Request $request)
