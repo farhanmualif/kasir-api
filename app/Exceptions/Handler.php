@@ -41,7 +41,7 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $e)
     {
         if ($e instanceof NotFoundHttpException) {
-            return \responseJson("endpoint not found", null, false, 404);
+            return \responseJson("{$e->getMessage()}", null, false, 404);
         }
         return parent::render($request, $e);
     }

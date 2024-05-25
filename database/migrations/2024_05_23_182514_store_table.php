@@ -11,12 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stores', function(Blueprint $table){
+        Schema::create('stores', function (Blueprint $table) {
             $table->id();
             $table->uuid()->unique();
             $table->string('name', 100);
-            $table->string('address',100);
+            $table->unsignedBigInteger('user_id');
+            $table->string('address', 100);
             $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('users');
         });
     }
 

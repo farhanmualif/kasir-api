@@ -7,6 +7,7 @@ use App\Http\Requests\ProductUpdateRequest;
 use App\Http\Resources\ProductCollection;
 use App\Models\Product;
 use App\Models\Purchasing;
+use App\Models\Store;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -53,12 +54,18 @@ class ProductController extends Controller
                 'total_payment' => $insert_product->purchase_price * $insert_product->stock
             ]);
 
-
+            $store = Store::find($validated['store_id']);
+            if ($store == null) {
+                DB::rollBack();
+                return responseJson("Toko tidak ditemukan");
+            } // Ambil toko berdasarkan store_id
+            $insert_product->stores()->attach($store->id);
 
             // Simpan relasi dengan Category
             if ($validated['category_id'] != null) {
                 $insert_product->category()->attach($validated['category_id']);
             }
+
 
             DB::commit();
             return responseJson("berhasil tambah produk", new ProductCollection($insert_product));

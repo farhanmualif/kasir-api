@@ -32,6 +32,7 @@ class ProductStoreRequest extends FormRequest
             "image" =>  'image:jpeg,png,jpg,gif,svg|max:10240',
             "category_id" => 'numeric|nullable',
             "description" => 'nullable|max:200',
+            "store_id" => 'required|integer'
         ];
     }
 

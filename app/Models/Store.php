@@ -10,9 +10,10 @@ class Store extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
         'id',
+        'name',
         'uuid',
+        'user_id',
         'address',
     ];
 
@@ -21,13 +22,10 @@ class Store extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function product()
+    public function products()
     {
-        return $this->belongsToMany(Product::class, 'product_user', 'store_id', 'product_id');
+        return $this->belongsToMany(Product::class, 'product_store', 'store_id', 'product_id');
     }
 
-    public function users()
-    {
-        return $this->hasMany(User::class);
-    }
+    
 }

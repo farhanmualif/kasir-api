@@ -14,7 +14,7 @@ use Ramsey\Uuid\Uuid;
 
 class AuthController extends Controller
 {
-    public function store(StoreStoreRequest $request)
+    public function register(StoreStoreRequest $request)
     {
         DB::beginTransaction();
 
@@ -22,18 +22,16 @@ class AuthController extends Controller
             $validated = $request->validated();
             $validated['password'] = Hash::make($validated['password']);
             $userCreated = User::create($validated);
-            $validated['uuid'] = Uuid::uuid4();
-            // dd($userCreated->name);
 
             // Membuat store secara otomatis
             $storeCreated = Store::create([
                 'uuid' => Uuid::uuid4(),
+                "user_id" => $userCreated['id'],
                 'name' => $userCreated->name . '_store',
                 'address' => $validated['address'],
             ]);
 
             // Menyimpan relasi antara user dengan store
-            DB::insert("INSERT INTO user_store (user_id, store_id) VALUES (?, ?)", [$userCreated->id, $storeCreated->id]);
 
             DB::commit();
 
