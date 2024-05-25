@@ -1,47 +1,38 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UserRegisterRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
-use Laravel\Sanctum\Events\TokenAuthenticated;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Ramsey\Uuid\Uuid;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
+    public function store(UserRegisterRequest $request)
     {
-        $payload = $request->all();
+        DB::beginTransaction();
+        try {
+            $validated = $request->validated();
+            $validated['password'] = Hash::make($validated['password']);
+            $validated['uuid'] = Uuid::uuid4();
+            $userCreated = User::create($validated);
 
-        $validate = Validator::make($payload, [
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required',
-            'confirm_password' => 'required|same:password'
-        ]);
+            DB::commit();
 
-        if ($validate->fails()) {
-            return \response()->json([
-                'status' => \false,
-                'messgae' => $validate->errors(),
-            ])->setStatusCode(300);
+            $data = [
+                'user' => $userCreated,
+            ];
+
+            return responseJson("Berhasil mendaftarkan user", $data);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return responseJson("Gagal mendaftarkan user, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
         }
-        $payload['password'] = \bcrypt($payload['password']);
-
-        $create_user = User::create($request->all());
-        if (!$create_user) {
-            return response()->json([
-                'status' => \false,
-                'messgae' => 'any problem when insert data',
-            ]);
-        }
-
-        return \response()->json([
-            'status' => \true,
-            'data' => $create_user
-        ])->setStatusCode(200);
     }
 
     public function login(Request $request)
