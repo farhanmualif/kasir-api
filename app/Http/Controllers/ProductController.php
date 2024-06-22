@@ -22,7 +22,6 @@ class ProductController extends Controller
         foreach ($datas as $data) {
             $data['link'] = \url()->current() . '/' . $data->uuid;
         }
-        // dd($datas);
 
         return responseJson("produk ditemukan", ProductCollection::collection($datas));
     }
