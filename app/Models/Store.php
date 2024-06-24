@@ -18,6 +18,16 @@ class Store extends Model
     ];
 
     /**
+     * Get the user that owns the Store
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
      * The product that belong to the Store
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -26,6 +36,4 @@ class Store extends Model
     {
         return $this->belongsToMany(Product::class, 'product_store', 'store_id', 'product_id');
     }
-
-    
 }

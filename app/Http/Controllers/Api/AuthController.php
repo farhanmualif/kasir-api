@@ -3,67 +3,56 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
 use App\Http\Requests\StoreStoreRequest;
-use App\Models\Store;
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Ramsey\Uuid\Uuid;
+
 
 class AuthController extends Controller
 {
+
+    public UserService $userServices;
+
+    public function __construct(UserService $userServicess)
+    {
+        $this->userServices = $userServicess;
+    }
+
     public function register(StoreStoreRequest $request)
     {
-        DB::beginTransaction();
-
         try {
             $validated = $request->validated();
-            $validated['password'] = Hash::make($validated['password']);
-            $userCreated = User::create($validated);
+            $createUser = $this->userServices->register($validated);
 
-            // Membuat store secara otomatis
-            $storeCreated = Store::create([
-                'uuid' => Uuid::uuid4(),
-                "user_id" => $userCreated['id'],
-                'name' => $userCreated->name . '_store',
-                'address' => $validated['address'],
-            ]);
+            if ($createUser['status'] == false) {
+                return responseJson('Gagal menambahkan data user, email sudah ada.', null, false, 406);
+            }
 
-            // Menyimpan relasi antara user dengan store
+            return responseJson('Berhasil menambahkan data user', $createUser['data'], true, 200);
+        } catch (\Exception $th) {
 
-            DB::commit();
-
-            $data = [
-                'user' => $userCreated,
-                'store' => $storeCreated,
-            ];
-
-            return responseJson("Berhasil mendaftarkan toko", $data);
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return responseJson("Gagal mendaftarkan toko, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
+            // Generic exception handling
+            return responseJson("Gagal menambahkan user, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
         }
     }
 
-    public function login(Request $request)
+
+    public function login(LoginRequest $request)
     {
-        $payload = $request->all();
-        $check_user = User::where('email', $payload['email'])->first();
-        if (!$check_user) {
-            return responseJson('user tidak ditemukan', null, false, 404);
-        }
-        if (Auth::attempt(['email' => $payload['email'], 'password' => $payload['password']])) {
 
-            $success['token'] = $request->user()->createToken('token-name', ['server:update'])->plainTextToken;
-            $success['uuid'] = $request->user()['uuid'];
-            $success['user'] = $request->user()['name'];
-            $success['email'] = $request->user()['email'];
+        try {
+            $payload = $request->validated();
+            $loginUser = $this->userServices->login($payload, $request);
 
-            return responseJson('berhasil login', $success);
-        } else {
-            return responseJson('terjadi kesalahan', null, true, 500);
+            if (!$loginUser) {
+                return responseJson("email / password tidak ada", null, false, 401);
+            }
+
+            return responseJson("berhasil login", $loginUser['data'], true, 202);
+        } catch (\Throwable $th) {
+            return responseJson("Gagal melakukan login, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
         }
     }
 
@@ -83,13 +72,22 @@ class AuthController extends Controller
     {
         try {
             $check_header = $request->header('Authorization');
-            if ($check_header == \null) {
-                return responseJson('anda belum login', null, false, 404);
+
+            if ($check_header == null) {
+                return responseJson('Token tidak ditemukan, silakan login terlebih dahulu', null, false, 404);
             }
 
-            $user = auth('sanctum')->user();
-            $user->tokens()->delete();
+            $token = $request->user()->currentAccessToken();
 
+            if (!$token->exists()) {
+                return responseJson('Token tidak ditemukan, silakan login terlebih dahulu', null, false, 404);
+            }
+
+            $deleteToken = $this->userServices->logout($token);
+
+            if (!$deleteToken) {
+                return responseJson('tidak dapat logout', null, false, 404);
+            }
             return responseJson("berhasil logout", null, true, 200);
         } catch (\Throwable $th) {
             return responseJson("terjadi kesalahan: {$th->getMessage()}", null, true, 200);

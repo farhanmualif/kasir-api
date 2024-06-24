@@ -44,15 +44,4 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-
-
-    /**
-     * Get the store that owns the User
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function store()
-    {
-        return $this->belongsToMany(Store::class, 'user_store');
-    }
 }

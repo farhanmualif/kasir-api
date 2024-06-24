@@ -42,10 +42,10 @@ class UserController extends Controller
             // Simpan relasi dengan Category
             $user_created->store()->attach($store_created->id);
             DB::commit();
-            return responseJson("berhasil tambah produk", new StoreCollection($user_created));
+            return responseJson("berhasil tambah user", new StoreCollection($user_created));
         } catch (\Throwable $th) {
             DB::rollBack();
-            return responseJson("gagal menambahkan produk, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
+            return responseJson("gagal menambahkan user, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
         }
     }
 
