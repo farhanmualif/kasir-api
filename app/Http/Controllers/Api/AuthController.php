@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\StoreStoreRequest;
-use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 
@@ -41,13 +40,12 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
-
         try {
             $payload = $request->validated();
             $loginUser = $this->userServices->login($payload, $request);
 
-            if (!$loginUser) {
-                return responseJson("email / password tidak ada", null, false, 401);
+            if (!$loginUser['status']) {
+                return responseJson("email / password tidak ditemukan", null, false, 404);
             }
 
             return responseJson("berhasil login", $loginUser['data'], true, 202);
@@ -56,7 +54,7 @@ class AuthController extends Controller
         }
     }
 
-    public function checkAuth()
+    public function authenticated()
     {
         try {
             $auth = auth('sanctum')->check();
@@ -65,7 +63,7 @@ class AuthController extends Controller
             }
             return \responseJson("authenticated", null);
         } catch (\Throwable $th) {
-            return false;
+            return \responseJson("server problem", "{$th->getMessage()}", false, 500);
         }
     }
     public function logout(Request $request)
@@ -80,13 +78,13 @@ class AuthController extends Controller
             $token = $request->user()->currentAccessToken();
 
             if (!$token->exists()) {
-                return responseJson('Token tidak ditemukan, silakan login terlebih dahulu', null, false, 404);
+                return responseJson('Token tidak ditemukan', null, false, 404);
             }
 
             $deleteToken = $this->userServices->logout($token);
 
             if (!$deleteToken) {
-                return responseJson('tidak dapat logout', null, false, 404);
+                return responseJson('gagal melakukan logout', null, false, 404);
             }
             return responseJson("berhasil logout", null, true, 200);
         } catch (\Throwable $th) {

@@ -4,16 +4,15 @@ namespace App\Services;
 
 use App\Repositories\StoreRepository;
 use App\Repositories\UserRepository;
+use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Ramsey\Uuid\Uuid;
 
 class UserServiceImpl implements UserService
 {
-    public function __construct(protected UserRepository $userRepository, protected StoreRepository $storeRepository)
+    public function __construct(public UserRepository $userRepository, public StoreRepository $storeRepository, public Logger $logging)
     {
-        $this->userRepository = $userRepository;
-        $this->storeRepository = $storeRepository;
     }
 
     /**
@@ -63,12 +62,16 @@ class UserServiceImpl implements UserService
                 $success['user'] = $request->user()['name'];
                 $success['email'] = $request->user()['email'];
 
+
+                $this->logging->info('User logged in successfully with Email: ' . $request->user()['email']);
+
                 return
                     [
                         'status' => true,
                         'data' => $success
                     ];
             } else {
+
                 return [
                     'status' => false,
                     'data' => 'tidak dapat login'
@@ -87,6 +90,7 @@ class UserServiceImpl implements UserService
      */
     public function logout($token)
     {
+        $this->logging->channel('info')->info('User logged out successfully with ID: ' . auth()->id());
         return $this->userRepository->revokeCurrentToken($token);
     }
 
@@ -125,6 +129,8 @@ class UserServiceImpl implements UserService
                 'address' => $create_store->address
             ];
 
+            $this->logging->info('User register successfully with Email: ' . $create_user->email);
+
             DB::commit();
             return [
                 'status' => true,
@@ -137,5 +143,112 @@ class UserServiceImpl implements UserService
                 'data' => $th
             ];
         }
+    }
+    /**
+     * @inheritDoc
+     */
+    public function findByEmail(string $email)
+    {
+        $findUser = $this->userRepository->findByEmail($email);
+        if (!$findUser) {
+            return [
+                'status' => false,
+                'data' => null
+            ];
+        }
+        return $findUser;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function findById(string $id)
+    {
+        $findUser = $this->userRepository->findById($id);
+        if (!$findUser) {
+            return [
+                'status' => false,
+                'data' => null
+            ];
+        }
+        return $findUser;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function findByUuid(string $uuid)
+    {
+        $findUser = $this->userRepository->findByUuid($uuid);
+        if (!$findUser) {
+            return [
+                'status' => false,
+                'data' => null
+            ];
+        }
+        return $findUser;
+    }
+    /**
+     * @inheritDoc
+     */
+    public function updateById(string $id, $payload)
+    {
+
+        return $this->userRepository->updateByid($id, $payload);
+    }
+    /**
+     * @inheritDoc
+     */
+    public function updateByEmail(string $email, $payload)
+    {
+        return $this->userRepository->updateByid($email, $payload);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function updateByUuid(string $uuid, $payload)
+    {
+        try {
+            $findUser = $this->userRepository->findByUuid($uuid);
+            if (!$findUser) {
+                return [
+                    'status' => false,
+                    'data' => null
+                ];
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        return $this->userRepository->updateByUuid($uuid, $payload);
+    }
+    /**
+     * @inheritDoc
+     */
+    public function getUserByUuid(string $uuid)
+    {
+        return $this->userRepository->getByUuid($uuid);
+    }
+    /**
+     * @inheritDoc
+     */
+    public function deleteByEmail(string $email)
+    {
+        return $this->userRepository->deleteByEmail($email);
+    }
+    /**
+     * @inheritDoc
+     */
+    public function deleteById(string $id)
+    {
+        return $this->userRepository->deleteById($id);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function deleteByUuid(string $uuid)
+    {
+        return $this->userRepository->deleteByUuid($uuid);
     }
 }

@@ -26,7 +26,7 @@ class UserRepositoryImpl implements UserRepository
 
         return User::find($id)->first();
     }
-    function getByUuid($uuid)
+    function getByUuid(string $uuid)
     {
         return User::where('uuid', $uuid)->first();
     }
@@ -50,9 +50,9 @@ class UserRepositoryImpl implements UserRepository
     {
         return User::where('email', $email)->delete();
     }
-    function updateByEmail($email)
+    function updateByEmail($email, $payload)
     {
-        return User::where('email', $email)->update($email);
+        return User::where('email', $email)->update($payload);
     }
 
     public function findByEmail(string $email)
@@ -71,4 +71,27 @@ class UserRepositoryImpl implements UserRepository
     {
         return $token->delete();
     }
+    /**
+     * @inheritDoc
+     */
+
+    /**
+     * @inheritDoc
+     */
+    public function updateById(string $id, array $payload)
+    {
+        return User::where('id', $id)->update($payload);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function updateByUuid(string $uuid, array $payload)
+    {
+        return User::where('uuid', $uuid)->update($payload);
+    }
+    /**
+     * @inheritDoc
+     */
+
 }

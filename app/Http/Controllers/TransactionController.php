@@ -27,6 +27,8 @@ class TransactionController extends Controller
         DB::beginTransaction();
         try {
             $payload = $request->validated();
+
+
             $transaction = $payload["transaction"];
             $total_payment = 0;
 

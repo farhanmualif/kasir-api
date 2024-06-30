@@ -6,6 +6,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RaportController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,15 +23,17 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('login', [AuthController::class, 'login']);
 Route::post('register', [AuthController::class, 'register']);
-Route::get('check-auth', [AuthController::class, 'checkAuth']);
+Route::get('authenticated', [AuthController::class, 'authenticated']);
 
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::resource('products', ProductController::class);
+
     Route::post('product/upload', [ProductController::class, 'uploadImage']);
+    Route::resource('products', ProductController::class);
     Route::resource('transaction', TransactionController::class);
     Route::resource('category', CategoryController::class);
     Route::resource('barcode', BarcodeController::class);
+    Route::resource('user', UserController::class);
 
     Route::post('logout', [AuthController::class, 'logout']);
 

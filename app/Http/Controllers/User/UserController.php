@@ -4,21 +4,22 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreStoreRequest;
-use App\Http\Resources\StoreCollection;
-use App\Models\Store;
-use App\Models\User;
+use App\Services\StoreServices;
+use App\Services\UserService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
+
+    public function __construct(public UserService $userService, public StoreServices $storeServices)
+    {
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $users = User::all();
-        return \response()->json($users);
+        return responseJson('user ditemukan', $this->userService->getAll());
     }
 
     /**
@@ -26,27 +27,6 @@ class UserController extends Controller
      */
     public function create(StoreStoreRequest $request)
     {
-
-        DB::beginTransaction();
-        try {
-            $validated = $request->validated();
-
-            $user_created = User::create($validated);
-            // membuat store secara otomatis
-            $store_created =  Store::create([
-                'name' => $user_created->name . '_store',
-                'address' => $user_created->address,
-
-            ]);
-
-            // Simpan relasi dengan Category
-            $user_created->store()->attach($store_created->id);
-            DB::commit();
-            return responseJson("berhasil tambah user", new StoreCollection($user_created));
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return responseJson("gagal menambahkan user, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
-        }
     }
 
     /**
@@ -78,14 +58,25 @@ class UserController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        try {
+            $response =  $this->userService->updateByUuid($request->uuid, $request->all());
+
+            return responseJson('berhasil update data', $response);
+        } catch (\Throwable $th) {
+            return responseJson('gagal update data', "{$th->getMessage()} {$th->getFile()} {$th->getLine()}", false, 500);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $uuid)
     {
-        //
+        try {
+            $this->userService->deleteByUuid($uuid);
+            return responseJson("berhasil menghapus data", null);
+        } catch (\Throwable $th) {
+            return responseJson('gagal menghapus data', "{$th->getMessage()} {$th->getFile()} {$th->getLine()}", false, 500);
+        }
     }
 }

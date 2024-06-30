@@ -7,7 +7,9 @@ interface StoreRepository
     public function create(array $data);
     public function updateById($id,  $data);
     public function updateByUuid($uuid,  $data);
-    public function delete($id);
+    public function deleteById($id);
+    public function deleteByUuid($uuid);
+    public function deleteByUserUuid($userUuid);
     public function findById($id);
     public function findByUuid($uuid);
     public function getByUuid($uuid);

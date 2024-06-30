@@ -6,6 +6,7 @@ namespace App\Repositories;
 interface UserRepository
 {
     function getAll();
+
     function findById(int $id);
     function findByUuid(string $uuid);
     function findByEmail(string $email);
@@ -16,7 +17,9 @@ interface UserRepository
     function deleteById(int $id);
     function deleteByUuid(string $id);
     function deleteByEmail(string $email);
-    function updateByEmail(string $email);
+    function updateByEmail(string $email, array $payload);
+    function updateById(string $id, array $payload);
+    function updateByUuid(string $uuid, array $payload);
     function deleteToken(string $tokenId);
     function revokeCurrentToken(string $token);
 }

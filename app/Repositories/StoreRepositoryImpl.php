@@ -75,4 +75,28 @@ class StoreRepositoryImpl implements StoreRepository
     public function updateByUuid($uuid,  $data)
     {
     }
+    /**
+     * @inheritDoc
+     */
+    public function deleteById($id)
+    {
+        return Store::destroy($id);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function deleteByUuid($uuid)
+    {
+        return Store::where('uuid', $uuid)->delete();
+    }
+    /**
+     * @inheritDoc
+     */
+    public function deleteByUserUuid($userUuid)
+    {
+        $store = new Store();
+        dd($store->user());
+        return $store->user()->where('uuid', $userUuid)->delete();
+    }
 }

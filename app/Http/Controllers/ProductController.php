@@ -6,71 +6,45 @@ use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
 use App\Http\Resources\ProductCollection;
 use App\Models\Product;
-use App\Models\Purchasing;
-use App\Models\Store;
+use App\Services\FileService;
+use App\Services\ProductService;
+use App\Services\StoreService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 
 class ProductController extends Controller
 {
+
+    public function __construct(public ProductService $productServices)
+    {
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $datas = Product::all();
-        foreach ($datas as $data) {
+
+        $products = $this->productServices->getAll();
+        foreach ($products as $data) {
             $data['link'] = \url()->current() . '/' . $data->uuid;
         }
-        // dd($datas);
 
-        return responseJson("produk ditemukan", ProductCollection::collection($datas));
+        return responseJson("produk ditemukan", ProductCollection::collection($products));
     }
 
     public function store(ProductStoreRequest $request)
     {
-        DB::beginTransaction();
         try {
-            $validated = $request->validated();
+            $request->validated();
+            $response = $this->productServices->create($request);
 
-            $file_name = "";
-
-            if ($request->hasFile('image')) {
-                $file_name = \time() . '.' . $request->image->extension();
-                $request->image->storeAs('public/images', $file_name);
-            } else {
-                $file_name = "product-default.png";
+            if (!$response['status']) {
+                return responseJson("gagal menambahkan produk, {$response['data']}", null, false, 500);
             }
-
-            $validated['image'] = $file_name;
-            $insert_product = Product::create($validated);
-
-            Purchasing::create([
-                'no_purchasing' => generateNoTransaction(),
-                'product_id' => $insert_product->id,
-                'quantity' => $insert_product->stock,
-                'description' => $insert_product->description,
-                'total_payment' => $insert_product->purchase_price * $insert_product->stock
-            ]);
-
-            $store = Store::find($validated['store_id']);
-            if ($store == null) {
-                DB::rollBack();
-                return responseJson("Toko tidak ditemukan");
-            } // Ambil toko berdasarkan store_id
-            $insert_product->stores()->attach($store->id);
-
-            // Simpan relasi dengan Category
-            if ($validated['category_id'] != null) {
-                $insert_product->category()->attach($validated['category_id']);
-            }
-
-
-            DB::commit();
-            return responseJson("berhasil tambah produk", new ProductCollection($insert_product));
+            return responseJson("berhasil tambah produk", new ProductCollection($response['data']));
         } catch (\Throwable $th) {
-            DB::rollBack();
             return responseJson("gagal menambahkan produk, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
         }
     }
@@ -78,13 +52,12 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $uuid)
+    public function show(string $id)
     {
         try {
-            $product = Product::where("uuid", $uuid)->first();
-            if ($product == null) {
-                return responseJson("produk tidak ditemukan", null, false, 404);
-            }
+            $product = $this->productServices->getProductByUuid($id);
+
+            if (!$product['status']) return responseJson($product['data'], null, false, 404);
 
             return responseJson("produk ditemukan", new ProductCollection($product));
         } catch (\Throwable $th) {

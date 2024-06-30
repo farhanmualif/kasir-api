@@ -27,7 +27,7 @@ if (!function_exists("responseJson")) {
     }
 }
 if (!function_exists("generateInvoice")) {
-    function generateInvoice(string $no_transaction)
+    function  generateInvoice(string $no_transaction)
     {
         try {
             $transaction = DB::table('transactions')
