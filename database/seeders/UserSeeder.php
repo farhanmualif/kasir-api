@@ -16,11 +16,11 @@ class UserSeeder extends Seeder
     {
 
         $user = [
-            'uuid'=> Uuid::uuid4(),
-            'name'=>'testing',
-            'email'=>'testing@mail.com',
+            'uuid' => Uuid::uuid4(),
+            'name' => 'testing',
+            'email' => 'testing@mail.com',
             'password' => Hash::make('testing123'),
-            'role'=>'admin',
+            'role' => 'admin',
         ];
 
         User::create($user);

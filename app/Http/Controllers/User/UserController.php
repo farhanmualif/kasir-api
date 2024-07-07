@@ -4,14 +4,14 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreStoreRequest;
-use App\Services\StoreServices;
+use App\Services\StoreService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
 
-    public function __construct(public UserService $userService, public StoreServices $storeServices)
+    public function __construct(public UserService $userService, public StoreService $storeServices)
     {
     }
     /**

@@ -24,8 +24,8 @@ class ProductUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "name" => "nullable|max:100",
-            "barcode" => "nullable|max:15",
+            "name" => "required|max:100",
+            "barcode" => "required|max:15",
             "add_or_reduce_stock" => "required",
             "quantity_stok" => "required",
             "selling_price" => "required|numeric",
@@ -37,11 +37,9 @@ class ProductUpdateRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.nullable' => 'Nama boleh dikosongkan.',
-            'name.max' => 'Nama tidak boleh lebih dari 100 karakter.',
-            'barcode.nullable' => 'Kode batang boleh dikosongkan.',
-            'barcode.max' => 'Kode batang tidak boleh lebih dari 15 karakter.',
-            'add_or_reduce_stock.required' => 'Penambahan atau pengurangan stok wajib dipilih.',
+            'name.required' => 'Nama tidak boleh kosongkan.',
+            'barcode.required' => 'Kode batang tidak boleh dikosongkan.',
+            'add_or_reduce_stock.required' => 'Penambahan atau pengurangan stok wajib diisi.',
             'quantity_stok.required' => 'Jumlah stok wajib diisi.',
             'selling_price.required' => 'Harga jual wajib diisi.',
             'selling_price.numeric' => 'Harga jual harus berupa angka.',

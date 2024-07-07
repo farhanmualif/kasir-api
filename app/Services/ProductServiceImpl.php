@@ -3,10 +3,12 @@
 
 namespace App\Services;
 
+use App\Exceptions\ApiException;
+use App\Http\Requests\ProductUpdateRequest;
+use App\Http\Requests\UpdateImageProductRequest;
 use App\Repositories\CategoryRepository;
 use App\Repositories\ProductRepository;
 use App\Repositories\PurchasingRepository;
-use App\Repositories\StoreRepository;
 use App\Services\FileService;
 use App\Services\ProductService;
 use Exception;
@@ -19,7 +21,7 @@ use Illuminate\Support\Facades\Log;
 class ProductServiceImpl implements ProductService
 {
 
-    public function __construct(public ProductRepository $productRepository, public FileService $fileService, public PurchasingRepository $purchasingRepository, public StoreRepository $storeRepository, public CategoryRepository $categoryRepository, public Logger $logging)
+    public function __construct(public ProductRepository $productRepository, public FileService $fileService, public PurchasingRepository $purchasingRepository, public StoreService $storeRepository, public CategoryRepository $categoryRepository, public Logger $logging)
     {
     }
 
@@ -28,11 +30,13 @@ class ProductServiceImpl implements ProductService
      */
     public function create(Request $request)
     {
+        $request->validated();
+
         DB::beginTransaction();
         try {
 
             if ($this->productRepository->findByBarcode($request['barcode'])) {
-                return ['status' => false, 'data' => 'barcode sudah digunakan'];
+                throw new ApiException('barcode sudah digunakan');
             }
 
             $filename = $request->hasFile('image')
@@ -49,7 +53,7 @@ class ProductServiceImpl implements ProductService
             ]);
 
             if (!$insertProduct) {
-                throw new Exception('Gagal menyimpan produk');
+                throw new ApiException('Gagal menyimpan produk');
             }
 
             $purchasing = $this->purchasingRepository->create([
@@ -61,27 +65,28 @@ class ProductServiceImpl implements ProductService
             ]);
 
             if (!$purchasing) {
-                throw new Exception('Gagal menyimpan data pembelian');
+                throw new ApiException('Gagal menyimpan data pembelian');
             }
 
             if ($request['category_id'] != null) {
-                $this->categoryRepository->findById($request['category_id']) ? $insertProduct->category()->attach($request['category_id']) :  ['status' => false, 'data' => 'category tidak ditemukan'];
+                $this->categoryRepository->findById($request['category_id']) ? $insertProduct->category()->attach($request['category_id']) :   throw new ApiException('category tidak ditemukan');
             }
 
             $storeId = intval($request['store_id']);
             $store = $this->storeRepository->findById($storeId);
             if (!$store) {
-                return ['status' => false, 'data' => 'store tidak ditemukan'];
+                throw new ApiException('store tidak ditemukan');
             }
             $insertProduct->stores()->attach($storeId);
 
             DB::commit();
             $this->logging->info('Successful create product ' . $insertProduct->name . ' by ' . $request->user()['email']);
-            return ['status' => true, 'data' => $insertProduct];
+
+            return $insertProduct;
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Error creating product: ' . $e->getMessage());
-            throw new Exception($e->getMessage());
+            throw new ApiException($e->getMessage());
         }
     }
 
@@ -91,7 +96,7 @@ class ProductServiceImpl implements ProductService
      */
     public function deleteProductById($id)
     {
-        if (!$this->findProductById($id)) return ['status' => false, 'data' => 'product tidak ditemukan'];
+        if (!$this->findProductById($id)) throw new ApiException('product tidak ditemukan');;
         return $this->productRepository->deleteById($id);
     }
 
@@ -128,7 +133,12 @@ class ProductServiceImpl implements ProductService
      */
     public function getAll()
     {
-        return $this->productRepository->getAll();
+        try {
+            //code...
+            return $this->productRepository->getAll();
+        } catch (\Throwable $th) {
+            throw new ApiException('terjadi kesalahan' . $th->getMessage());
+        }
     }
 
     /**
@@ -136,8 +146,7 @@ class ProductServiceImpl implements ProductService
      */
     public function getProductById($id)
     {
-        if (!$this->findProductById($id)) ['status' => false, 'data' => 'product tidak ditemukan'];
-        return $this->productRepository->findById($id);
+        $this->findProductById($id) ? ['status' => true, 'data' => $this->productRepository->findById($id)] :  throw new ApiException("product tidak ditemukan");;
     }
 
 
@@ -147,7 +156,10 @@ class ProductServiceImpl implements ProductService
      */
     public function getProductByUuid($uuid)
     {
-        if (!$this->findProductByUuid($uuid)) return ['status' => false, 'data' => 'data tidak ditemukan'];
+        if (!$this->findProductByUuid($uuid)) {
+
+            throw new ApiException("product tidak ditemukan");
+        }
         return $this->productRepository->getByUuid($uuid);
     }
 
@@ -164,9 +176,48 @@ class ProductServiceImpl implements ProductService
     /**
      * @inheritDoc
      */
-    public function updateProductByUuid($uuid, $data)
+    public function updateProductByUuid($uuid, ProductUpdateRequest $request)
     {
-        return $this->productRepository->updateByUuid($uuid, $data);
+
+        DB::beginTransaction();
+        try {
+            $payload = $request->validated();
+
+            $findProduct = $this->productRepository->findByUuid($uuid);
+
+            if (!$findProduct) {
+                throw new ApiException("produk tidak ditemukan", 404);
+            }
+            $currentProduct = $this->productRepository->getByUuid($uuid);
+
+            unset($payload["_method"]);
+
+            $new_stock = 0;
+
+            if ($payload['add_or_reduce_stock'] == "add") {
+                $new_stock = $currentProduct->stock + $payload['quantity_stok'];
+            } else if ($payload['add_or_reduce_stock'] == "reduce") {
+                $new_stock = $currentProduct->stock - $payload['quantity_stok'];
+            } else {
+                throw new ApiException("gagal update produk add_or_reduce_stok barus berisi add atau reduce", 404);
+            }
+
+            $this->productRepository->updateByUuid($uuid, [
+                "name" => $payload['name'],
+                "barcode" => $payload['barcode'],
+                "stock" => $new_stock,
+                "selling_price" => $payload['selling_price'],
+                "purchase_price" => $payload['purchase_price'],
+            ]);
+
+            DB::commit();
+
+            return $this->getProductByUuid($uuid);
+        } catch (\Throwable $th) {
+
+            DB::rollBack();
+            throw new ApiException($th->getMessage());
+        }
     }
 
     /**
@@ -182,5 +233,27 @@ class ProductServiceImpl implements ProductService
     public function findProductByBarcode($name)
     {
         return $this->productRepository->findByBarcode($name);
+    }
+    /**
+     * @inheritDoc
+     */
+    public function updateProductImageByUuid($uuid, UpdateImageProductRequest $request)
+    {
+        try {
+            $payload = $request->validated();
+            if (!$request->hasFile('image')) {
+                throw new ApiException('image tidak ditemukan', 400);
+            }
+            $currentProduct = $this->productRepository->getByUuid($uuid);
+            $currentProduct['image'] == 'product-default.png' ?: $this->fileService->deleteProductImage($payload['image']);
+            $filename =  time() . '.' . $request->image->extension();
+            $this->fileService->uploadProductImage($request, $filename);
+            $this->productRepository->updateByUuid($uuid, [
+                'image' => $filename
+            ]);
+            return $this->productRepository->getByUuid($uuid);
+        } catch (\Throwable $th) {
+            throw new ApiException($th->getMessage());
+        }
     }
 }

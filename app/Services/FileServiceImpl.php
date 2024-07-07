@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\ApiException;
 use App\Services\FileService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -18,7 +19,7 @@ class FileServiceImpl implements FileService
      */
     public function deleteProductImage(string $filename)
     {
-       return $this->storage->delete("product/images" . $filename);
+        return $this->storage->delete("product/images" . $filename);
     }
 
     /**
@@ -34,14 +35,22 @@ class FileServiceImpl implements FileService
      */
     public function uploadProductImage(Request $request, string $filename)
     {
-        return $request->image->storeAs('public/images', $filename);
+        try {
+            return $request->image->storeAs('public/images', $filename);
+        } catch (\Throwable $th) {
+            throw new ApiException($th->getMessage());
+        }
     }
 
     /**
      * @inheritDoc
      */
-    public function uploadStruckTransaction( Request $request, string $filename)
+    public function uploadStruckTransaction(Request $request, string $filename)
     {
-       return $request->image->storeAs('public/images', $filename);
+        try {
+            return $request->image->storeAs('public/images', $filename);
+        } catch (\Throwable $th) {
+            throw new ApiException($th->getMessage());
+        }
     }
 }

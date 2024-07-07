@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Http\Requests\ProductUpdateRequest;
+use App\Http\Requests\UpdateImageProductRequest;
 use Illuminate\Http\Request;
 
 interface ProductService
@@ -14,8 +16,9 @@ interface ProductService
     public function findProductById($id);
     public function findProductByBarcode($name);
     public function findProductByUuid($uuid);
-    public function updateProductById($id, $data);
-    public function updateProductByUuid($uuid, $data);
+    public function updateProductById($id, ProductUpdateRequest $data);
+    public function updateProductByUuid($uuid, ProductUpdateRequest $data);
+    public function updateProductImageByUuid($uuid, UpdateImageProductRequest $data);
     public function deleteProductById($id);
     public function deleteProductByUuid($uuid);
 }

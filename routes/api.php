@@ -30,6 +30,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::post('product/upload', [ProductController::class, 'uploadImage']);
     Route::resource('products', ProductController::class);
+    Route::put('products/{uuid}/image', [ProductController::class, 'updateImage']);
     Route::resource('transaction', TransactionController::class);
     Route::resource('category', CategoryController::class);
     Route::resource('barcode', BarcodeController::class);

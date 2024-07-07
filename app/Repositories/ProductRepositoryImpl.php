@@ -73,7 +73,7 @@ class ProductRepositoryImpl implements ProductRepository
      */
     public function getAll()
     {
-        return $this->product->category();
+        return $this->product->with("category");
     }
 
     /**
@@ -106,7 +106,8 @@ class ProductRepositoryImpl implements ProductRepository
      */
     public function getByUuid(string $uuid)
     {
-        return $this->product->where('uuid', $uuid)->get();
+
+        return $this->product->where('uuid', $uuid)->first();
     }
 
     /**
@@ -130,6 +131,6 @@ class ProductRepositoryImpl implements ProductRepository
      */
     public function updateByUuid(string $uuid, array $data)
     {
-        return $this->product->find($uuid)->update($data);
+        return $this->product->where('uuid', $uuid)->update($data);
     }
 }
