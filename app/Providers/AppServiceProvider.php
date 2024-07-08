@@ -11,9 +11,11 @@ use App\Repositories\PurchasingRepositoryImpl;
 use App\Repositories\StoreRepository;
 use App\Repositories\StoreRepositoryImpl;
 use App\Repositories\UserRepository;
+use App\Services\CategoryServiceImpl;
 use App\Services\ProductServiceImpl;
 use Illuminate\Support\ServiceProvider;
 use App\Repositories\UserRepositoryImpl;
+use App\Services\CategoryService;
 use App\Services\FileService;
 use App\Services\FileServiceImpl;
 use App\Services\ProductService;
@@ -22,7 +24,6 @@ use App\Services\StoreService;
 use App\Services\UserService;
 use App\Services\UserServiceImpl;
 use App\Services\StoreServiceImpl;
-
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -46,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(FileService::class, FileServiceImpl::class);
 
         $this->app->bind(CategoryRepository::class, CategoryRepositoryImpl::class);
+        $this->app->bind(CategoryService::class, CategoryServiceImpl::class);
     }
 
     /**

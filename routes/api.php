@@ -38,7 +38,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::post('logout', [AuthController::class, 'logout']);
 
-    Route::put('category-product/{uuid}', [CategoryController::class, 'updateProductCategory']);
+    Route::put('category-product/{uuid}', [CategoryController::class, 'updateByProductUuid']);
     Route::get('daily-transaction/{date}', [RaportController::class, 'getSalesPerday']);
     Route::get('mountly-transaction/{date}', [RaportController::class, 'getSalesMonthly']);
     Route::get('years-transaction/{date}', [RaportController::class, 'getSalesYears']);

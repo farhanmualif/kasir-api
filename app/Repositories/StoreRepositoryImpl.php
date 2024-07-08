@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Store;
+use App\Repositories\StoreRepository;
 
 class StoreRepositoryImpl implements StoreRepository
 {
@@ -28,6 +29,7 @@ class StoreRepositoryImpl implements StoreRepository
      */
     public function findById($id)
     {
+
         return Store::find($id)->exists();
     }
 
@@ -96,7 +98,7 @@ class StoreRepositoryImpl implements StoreRepository
     public function deleteByUserUuid($userUuid)
     {
         $store = new Store();
-        dd($store->user());
+
         return $store->user()->where('uuid', $userUuid)->delete();
     }
 }

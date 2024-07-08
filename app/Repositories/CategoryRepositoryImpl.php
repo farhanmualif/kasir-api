@@ -4,6 +4,7 @@
 namespace App\Repositories;
 
 use App\Models\Category;
+use Illuminate\Support\Facades\DB;
 
 class CategoryRepositoryImpl implements CategoryRepository
 {
@@ -41,7 +42,19 @@ class CategoryRepositoryImpl implements CategoryRepository
      */
     public function getAll()
     {
-        return $this->category->all();
+        return $this->category->select(
+            'categories.id as id',
+            'categories.uuid as uuid',
+            'categories.name as name',
+            'categories.created_at',
+            'categories.updated_at',
+            DB::raw('COALESCE(SUM(products.purchase_price * products.stock), 0) as capital'),
+            DB::raw('CAST(COALESCE(SUM(products.stock), 0) AS SIGNED) as remaining_stock')
+        )
+            ->leftJoin('product_category', 'categories.id', '=', 'product_category.category_id')
+            ->leftJoin('products', 'product_category.product_id', '=', 'products.id')
+            ->groupBy('categories.id', 'categories.name')
+            ->get();
     }
 
     /**
@@ -88,6 +101,13 @@ class CategoryRepositoryImpl implements CategoryRepository
      */
     public function findByUuid(string $uuid)
     {
-        return $this->category->where('uuid', $uuid)->exists();
+        return $this->category->where('uuid', $uuid);
+    }
+    /**
+     * @inheritDoc
+     */
+    public function getByName(string $name)
+    {
+        return $this->category->where('name', $name);
     }
 }

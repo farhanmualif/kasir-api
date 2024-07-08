@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateImageProductRequest;
 use App\Repositories\CategoryRepository;
 use App\Repositories\ProductRepository;
 use App\Repositories\PurchasingRepository;
+use App\Repositories\StoreRepository;
 use App\Services\FileService;
 use App\Services\ProductService;
 use Exception;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\Log;
 class ProductServiceImpl implements ProductService
 {
 
-    public function __construct(public ProductRepository $productRepository, public FileService $fileService, public PurchasingRepository $purchasingRepository, public StoreService $storeRepository, public CategoryRepository $categoryRepository, public Logger $logging)
+    public function __construct(public Logger $logging, public ProductRepository $productRepository, public FileService $fileService, public PurchasingRepository $purchasingRepository, public StoreRepository $storeRepository, public CategoryRepository $categoryRepository)
     {
     }
 
@@ -74,6 +75,7 @@ class ProductServiceImpl implements ProductService
 
             $storeId = intval($request['store_id']);
             $store = $this->storeRepository->findById($storeId);
+
             if (!$store) {
                 throw new ApiException('store tidak ditemukan');
             }
@@ -107,7 +109,7 @@ class ProductServiceImpl implements ProductService
      */
     public function deleteProductByUuid($uuid)
     {
-        if (!$this->findProductByUuid($uuid)) ['status' => false, 'data' => 'product tidak ditemukan'];
+        if (!$this->productRepository->findByUuid($uuid)->exists()) throw new ApiException('product tidak ditemukan');
         return $this->productRepository->deleteByUuid($uuid);
     }
 
@@ -125,7 +127,7 @@ class ProductServiceImpl implements ProductService
      */
     public function findProductByUuid($uuid)
     {
-        return $this->productRepository->findByUuid($uuid);
+        return $this->productRepository->findByUuid($uuid)->exists();
     }
 
     /**
@@ -183,7 +185,7 @@ class ProductServiceImpl implements ProductService
         try {
             $payload = $request->validated();
 
-            $findProduct = $this->productRepository->findByUuid($uuid);
+            $findProduct = $this->productRepository->findByUuid($uuid)->exists();
 
             if (!$findProduct) {
                 throw new ApiException("produk tidak ditemukan", 404);

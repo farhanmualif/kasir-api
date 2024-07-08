@@ -2,12 +2,13 @@
 
 namespace App\Repositories;
 
+use App\Models\Category;
 use App\Models\Product;
 
 class ProductRepositoryImpl implements ProductRepository
 {
 
-    public function __construct(public Product $product)
+    public function __construct(public Product $product, public Category $category)
     {
     }
 
@@ -65,7 +66,7 @@ class ProductRepositoryImpl implements ProductRepository
      */
     public function findByUuid(string $uuid)
     {
-        return $this->product->where("uuid", $uuid)->exists();
+        return $this->product->where("uuid", $uuid);
     }
 
     /**
@@ -132,5 +133,12 @@ class ProductRepositoryImpl implements ProductRepository
     public function updateByUuid(string $uuid, array $data)
     {
         return $this->product->where('uuid', $uuid)->update($data);
+    }
+    /**
+     * @inheritDoc
+     */
+    public function getByCategory(string $category)
+    {
+        return $this->category->where('name', $category)->product();
     }
 }

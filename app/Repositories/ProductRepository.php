@@ -15,6 +15,7 @@ interface ProductRepository
     public function getByUuid(string $uuid);
     public function getByName(string $name);
     public function getByBarcode(string $barcode);
+    public function getByCategory(string $category);
     public function updateById(int $id, array $data);
     public function updateByUuid(string $uuid, array $data);
     public function updateByBarcode(string $barcode, array $data);

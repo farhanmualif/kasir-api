@@ -7,9 +7,7 @@ use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
 use App\Http\Requests\UpdateImageProductRequest;
 use App\Http\Resources\ProductCollection;
-use App\Models\Product;
 use App\Services\ProductService;
-use Illuminate\Support\Facades\DB;
 
 
 
@@ -49,6 +47,10 @@ class ProductController extends Controller
         return responseJson("produk ditemukan", new ProductCollection($product));
     }
 
+    public function showByCategory(string $nameCategory)
+    {
+    }
+
 
     public function update(ProductUpdateRequest $request, string $id)
     {
@@ -67,15 +69,7 @@ class ProductController extends Controller
      */
     public function destroy(string $id)
     {
-        DB::beginTransaction();
-        try {
-            Product::where("uuid", $id)->delete();
-            DB::commit();
-            return responseJson("berhadil menghapus data produk", null, true, 200);
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            DB::commit();
-            return responseJson("gagal menghapus data produk {$th->getMessage()}", null, false, 500);
-        }
+        $this->productServices->deleteProductByUuid($id);
+        return responseJson("berhasil menghapus data");
     }
 }
