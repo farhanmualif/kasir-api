@@ -4,15 +4,20 @@ namespace App\Providers;
 
 use App\Repositories\CategoryRepository;
 use App\Repositories\CategoryRepositoryImpl;
+use App\Repositories\DetailTransactionRepository;
+use App\Repositories\DetailTransactionRepositoryImpl;
 use App\Repositories\ProductRepository;
 use App\Repositories\ProductRepositoryImpl;
 use App\Repositories\PurchasingRepository;
 use App\Repositories\PurchasingRepositoryImpl;
 use App\Repositories\StoreRepository;
 use App\Repositories\StoreRepositoryImpl;
+use App\Repositories\TransactionRepository;
+use App\Repositories\TransactionRepositoryImpl;
 use App\Repositories\UserRepository;
 use App\Services\CategoryServiceImpl;
 use App\Services\ProductServiceImpl;
+use App\Services\TransactionServiceImpl;
 use Illuminate\Support\ServiceProvider;
 use App\Repositories\UserRepositoryImpl;
 use App\Services\CategoryService;
@@ -24,6 +29,7 @@ use App\Services\StoreService;
 use App\Services\UserService;
 use App\Services\UserServiceImpl;
 use App\Services\StoreServiceImpl;
+use App\Services\TransactionService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -48,6 +54,11 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(CategoryRepository::class, CategoryRepositoryImpl::class);
         $this->app->bind(CategoryService::class, CategoryServiceImpl::class);
+
+        $this->app->bind(TransactionRepository::class, TransactionRepositoryImpl::class);
+        $this->app->bind(TransactionService::class, TransactionServiceImpl::class);
+
+        $this->app->bind(DetailTransactionRepository::class, DetailTransactionRepositoryImpl::class);
     }
 
     /**

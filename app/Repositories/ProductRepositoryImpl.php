@@ -57,7 +57,7 @@ class ProductRepositoryImpl implements ProductRepository
      */
     public function findById(int $id)
     {
-        return $this->product->where('id', $id)->exists();
+        return $this->product->find($id);
     }
 
 

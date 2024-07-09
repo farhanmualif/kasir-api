@@ -27,9 +27,8 @@ class TransactionStoreRequest extends FormRequest
             'transaction.cash' => 'required|numeric',
             'transaction.items' => 'required|array',
             'transaction.items.*.id_product' => 'required|integer',
-            'transaction.items.*.name' => 'required|string',
             'transaction.items.*.quantity' => 'required|integer',
-            'transaction.items.*.item_price' => 'required|integer',
+
         ];
     }
 

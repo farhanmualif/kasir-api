@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\ApiException;
 use App\Repositories\StoreRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Log\Logger;
@@ -112,24 +113,24 @@ class UserServiceImpl implements UserService
             }
 
             /* insert user */
-            $create_user = $this->userRepository->create($payload);
+            $createUser = $this->userRepository->create($payload);
 
             /* create store */
             $create_store = $this->storeRepository->create([
                 'uuid' => Uuid::uuid4()->toString(),
-                'name' => $create_user->name . '_store',
+                'name' => $createUser->name . '_store',
                 'address' => $payload['address'],
-                'user_id' => $create_user->id
+                'user_id' => $createUser->id
             ]);
 
             $response = [
                 'store' => $create_store->name,
-                'name' => $create_user->name,
-                'email' => $create_user->email,
+                'name' => $createUser->name,
+                'email' => $createUser->email,
                 'address' => $create_store->address
             ];
 
-            $this->logging->info('User register successfully with Email: ' . $create_user->email);
+            $this->logging->info('User register successfully with Email: ' . $createUser->email);
 
             DB::commit();
             return [
@@ -212,13 +213,10 @@ class UserServiceImpl implements UserService
         try {
             $findUser = $this->userRepository->findByUuid($uuid);
             if (!$findUser) {
-                return [
-                    'status' => false,
-                    'data' => null
-                ];
+                throw new ApiException('user tidak ditemukan');
             }
         } catch (\Throwable $th) {
-            //throw $th;
+            throw new ApiException($th->getMessage());
         }
         return $this->userRepository->updateByUuid($uuid, $payload);
     }
