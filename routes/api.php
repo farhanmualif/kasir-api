@@ -33,17 +33,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('products/{uuid}/image', [ProductController::class, 'updateImage']);
     Route::resource('transaction', TransactionController::class);
     Route::resource('category', CategoryController::class);
+    Route::put('category-product/{uuid}', [CategoryController::class, 'updateByProductUuid']);
     Route::resource('barcode', BarcodeController::class);
     Route::resource('user', UserController::class);
 
     Route::post('logout', [AuthController::class, 'logout']);
 
-    Route::put('category-product/{uuid}', [CategoryController::class, 'updateByProductUuid']);
-    Route::get('daily-transaction/{date}', [RaportController::class, 'getSalesPerday']);
-    Route::get('mountly-transaction/{date}', [RaportController::class, 'getSalesMonthly']);
-    Route::get('years-transaction/{date}', [RaportController::class, 'getSalesYears']);
+    Route::get('sales/daily/{date}', [RaportController::class, 'getDailySales']);
+    Route::get('sales/monthly/{date}', [RaportController::class, 'getMonthlySales']);
+    Route::get('sales/yearly/{date}', [RaportController::class, 'getYearlySales']);
 
-    Route::get('daily-purchases/{date}', [RaportController::class, 'getDailyPurchases']);
-    Route::get('monthly-purchases/{date}', [RaportController::class, 'getmonthlyPurchases']);
-    Route::get('years-purchases/{date}', [RaportController::class, 'getYearsPurchases']);
+    Route::get('purchases/daily/{date}', [RaportController::class, 'getDailyPurchases']);
+    Route::get('purchases/monthly/{date}', [RaportController::class, 'getMonthlyPurchases']);
+    Route::get('purchases/yearly/{date}', [RaportController::class, 'getYearlyPurchases']);
 });

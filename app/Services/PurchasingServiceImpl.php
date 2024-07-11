@@ -1,5 +1,7 @@
 <?php
 
+
+namespace App\Services;
 use App\Repositories\PurchasingRepository;
 use App\Services\PurchasingService;
 
