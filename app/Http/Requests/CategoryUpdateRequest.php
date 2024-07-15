@@ -24,7 +24,7 @@ class CategoryUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_id' => 'required|numeric'
+            'category_id' => 'required|array'
         ];
     }
 
@@ -32,7 +32,7 @@ class CategoryUpdateRequest extends FormRequest
     {
         return [
             'category_id.required' => 'category_id tidak boleh kosong',
-            'category_id.numeric' => 'category_id harus berupa number',
+            'category_id.array' => 'category_id harus berupa array',
         ];
     }
 

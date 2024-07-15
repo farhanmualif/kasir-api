@@ -12,7 +12,7 @@ use Ramsey\Uuid\Uuid;
 
 class UserServiceImpl implements UserService
 {
-    public function __construct(public UserRepository $userRepository, public StoreRepository $storeRepository, public Logger $logging)
+    public function __construct(public UserRepository $userRepository, public Logger $logging,public StoreRepository $storeRepository)
     {
     }
 
@@ -47,13 +47,10 @@ class UserServiceImpl implements UserService
     {
         try {
 
-            $check_user = $this->userRepository->findByEmail($payload['email']);
+            $checkUser = $this->userRepository->findByEmail($payload['email']);
 
-            if (!$check_user) {
-                return [
-                    'status' => false,
-                    'data' => 'email / password tidak ditemukan'
-                ];
+            if (!$checkUser) {
+                throw new ApiException('user tidak ditemukan');
             }
 
             if (Auth::attempt(['email' => $payload['email'], 'password' => $payload['password']])) {
@@ -116,7 +113,7 @@ class UserServiceImpl implements UserService
             $createUser = $this->userRepository->create($payload);
 
             /* create store */
-            $create_store = $this->storeRepository->create([
+            $createStore = $this->storeRepository->create([
                 'uuid' => Uuid::uuid4()->toString(),
                 'name' => $createUser->name . '_store',
                 'address' => $payload['address'],
@@ -124,25 +121,19 @@ class UserServiceImpl implements UserService
             ]);
 
             $response = [
-                'store' => $create_store->name,
+                'store' => $createStore->name,
                 'name' => $createUser->name,
                 'email' => $createUser->email,
-                'address' => $create_store->address
+                'address' => $createStore->address
             ];
 
             $this->logging->info('User register successfully with Email: ' . $createUser->email);
 
             DB::commit();
-            return [
-                'status' => true,
-                'data' => $response
-            ];
+            return $response;
         } catch (\Illuminate\Database\QueryException $th) {
             DB::rollBack();
-            return [
-                'status' => false,
-                'data' => $th
-            ];
+            throw new ApiException($th->getMessage());
         }
     }
     /**
@@ -152,10 +143,7 @@ class UserServiceImpl implements UserService
     {
         $findUser = $this->userRepository->findByEmail($email);
         if (!$findUser) {
-            return [
-                'status' => false,
-                'data' => null
-            ];
+            throw new ApiException('user tidak ditemukan');
         }
         return $findUser;
     }
@@ -167,10 +155,7 @@ class UserServiceImpl implements UserService
     {
         $findUser = $this->userRepository->findById($id);
         if (!$findUser) {
-            return [
-                'status' => false,
-                'data' => null
-            ];
+            throw new ApiException('user tidak ditemukan');;
         }
         return $findUser;
     }
@@ -182,10 +167,7 @@ class UserServiceImpl implements UserService
     {
         $findUser = $this->userRepository->findByUuid($uuid);
         if (!$findUser) {
-            return [
-                'status' => false,
-                'data' => null
-            ];
+             throw new ApiException('user tidak ditemukan');;
         }
         return $findUser;
     }

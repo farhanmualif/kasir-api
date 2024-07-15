@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TransactionStoreRequest;
-use App\Models\Transaction;
 use App\Services\TransactionService;
 use Illuminate\Http\Request;
 
@@ -28,9 +27,9 @@ class TransactionController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $no_transaction)
+    public function show(string $noTransaction)
     {
-        return responseJson("berhasil mendapatkan data", $this->transactionService->getByNoTransaction($no_transaction));
+        return responseJson("berhasil mendapatkan data", $this->transactionService->getByNoTransaction($noTransaction));
     }
 
     /**

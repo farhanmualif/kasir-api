@@ -6,7 +6,8 @@ namespace App\Repositories;
 interface ProductRepository
 {
     public function create(array $data);
-
+    public function addCategoriesToProduct(string $productUuid, array $categoriesId);
+    public function deleteCategoriesInProduct(string $productUuid, array $categoriesId);
     public function findById(int $id);
     public function findByUuid(string $uuid);
     public function findByBarcode(string $barcode);

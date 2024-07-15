@@ -25,7 +25,8 @@ class CategoryServiceImpl implements CategoryService
     {
         try {
             $data = $request->validated();
-            if ($this->categoryRepository->getByName($data["name"]) != null) throw new ApiException("category sudah ada");
+
+            if ($this->categoryRepository->getByName($data["name"])->first() != null) throw new ApiException("category sudah ada");
             $insertCategory = $this->categoryRepository->create($data);
             return $this->categoryRepository->getById($insertCategory->id);
         } catch (\Throwable $th) {
@@ -150,13 +151,13 @@ class CategoryServiceImpl implements CategoryService
         DB::beginTransaction();
         try {
             $payload = $request->validated();
-            // $product = Product::where('uuid', $uuid)->first();
+
             if (!$this->productRepository->findByUuid($productUuid)->exists()) {
                 throw new ApiException('product tidak ditemukan');
             }
             $product = $this->productRepository->findByUuid($productUuid)->first();
             $product->category()->sync([$payload['category_id']]);
-            // $response = Product::with('category')->where('uuid', $uuid)->first();
+
             $response = $product->with('category')->where('uuid', $productUuid)->first();
             DB::commit();
             return $response;

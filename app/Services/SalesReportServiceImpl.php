@@ -102,7 +102,7 @@ class SalesReportServiceImpl implements SalesReportService
             foreach ($monthlySales as $sale) {
                 $salesData['transactions'][] = [
                     'link' => \url()->previous() . "/api/sales/daily/{$sale->year}-{$sale->month_number}-{$sale->day}",
-                    'date' => "$sale->day",
+                    'date' => (string) $sale->day,
                     'income' => intval($sale->income),
                     'transaction_amount' => $sale->transaction_amount,
                     'profit' => intval($sale->profit),

@@ -26,15 +26,15 @@ class PurchaseReportServiceImpl implements PurchaseReportService
 
             $dailyPurchases = $this->purchaseReportRepository->daily($date->day, $date->month, $date->year)->get();
 
-            $total_expenditure = 0;
+            $totalExpenditure = 0;
             foreach ($dailyPurchases as $data) {
-                $total_expenditure += intval($data->total_expenditure);
+                $totalExpenditure += intval($data->total_expenditure);
             }
 
             $data = [
                 "link" => \url()->current(),
                 "total_transaction" => $dailyPurchases->count(),
-                "total_expenditure" => $total_expenditure,
+                "total_expenditure" => $totalExpenditure,
                 "items_purchasing" => []
             ];
 

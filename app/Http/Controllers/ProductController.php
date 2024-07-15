@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-
+use App\Http\Requests\AddCategoryToProductRequest;
+use App\Http\Requests\CategoryUpdateRequest;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
 use App\Http\Requests\UpdateImageProductRequest;
@@ -47,8 +48,19 @@ class ProductController extends Controller
         return responseJson("produk ditemukan", new ProductCollection($product));
     }
 
-    public function showByCategory(string $nameCategory)
+    public function showByCategory(string $categoryName)
     {
+        return responseJson("produk ditemukan", new ProductCollection($this->productServices->getProductByCategory($categoryName)));
+    }
+
+    public function addCategoriesToProduct(CategoryUpdateRequest $request, string $productUuid)
+    {
+        return responseJson("produk ditemukan", new ProductCollection($this->productServices->addCategoriesToProduct($request, $productUuid)));
+    }
+
+    public function removeCategoriesFromProduct(CategoryUpdateRequest $request, string $productUuid)
+    {
+        return responseJson("produk ditemukan", new ProductCollection($this->productServices->deleteCategoriesInProduct($request, $productUuid)));
     }
 
 

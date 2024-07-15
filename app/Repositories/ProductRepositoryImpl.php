@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProductRepositoryImpl implements ProductRepository
 {
@@ -139,6 +140,28 @@ class ProductRepositoryImpl implements ProductRepository
      */
     public function getByCategory(string $category)
     {
-        return $this->category->where('name', $category)->product();
+
+        $products = $this->product->whereHas('category', function ($query) use ($category) {
+            $query->where('name', $category);
+        })->get();;
+
+        return $products;
+    }
+    /**
+     * @inheritDoc
+     */
+    public function addCategoriesToProduct(string $productUuid, array $categoriesId)
+    {
+        $product = $this->product->where('uuid', $productUuid)->first();
+        return $product->category()->syncWithoutDetaching($categoriesId);
+    }
+    /**
+     * @inheritDoc
+     */
+    public function deleteCategoriesInProduct(string $productUuid, array $categoriesId)
+    {
+        $product = $this->product->where('uuid', $productUuid)->first();
+        $product->category()->detach($categoriesId);
+        return $this->getByUuid($productUuid);
     }
 }

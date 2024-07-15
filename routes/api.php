@@ -28,14 +28,19 @@ Route::get('authenticated', [AuthController::class, 'authenticated']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
 
-    Route::post('product/upload', [ProductController::class, 'uploadImage']);
     Route::resource('products', ProductController::class);
-    Route::put('products/{uuid}/image', [ProductController::class, 'updateImage']);
-    Route::resource('transaction', TransactionController::class);
-    Route::resource('category', CategoryController::class);
-    Route::put('category-product/{uuid}', [CategoryController::class, 'updateByProductUuid']);
     Route::resource('barcode', BarcodeController::class);
     Route::resource('user', UserController::class);
+    Route::resource('transaction', TransactionController::class);
+    Route::resource('category', CategoryController::class);
+
+    Route::post('product/upload', [ProductController::class, 'uploadImage']);
+    Route::put('products/{uuid}/image', [ProductController::class, 'updateImage']);
+    Route::get('categories/{categoryName}/products', [ProductController::class, 'showByCategory']);
+    Route::post('categories/{productUuid}/products', [ProductController::class, 'addCategoriesToProduct']);
+    Route::delete('categories/{productUuid}/products', [ProductController::class, 'removeCategoriesFromProduct']);
+    Route::put('categories/{uuid}/product', [CategoryController::class, 'updateByProductUuid']);
+
 
     Route::post('logout', [AuthController::class, 'logout']);
 

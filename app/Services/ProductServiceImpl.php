@@ -4,6 +4,8 @@
 namespace App\Services;
 
 use App\Exceptions\ApiException;
+use App\Http\Requests\AddCategoryToProductRequest;
+use App\Http\Requests\CategoryUpdateRequest;
 use App\Http\Requests\ProductUpdateRequest;
 use App\Http\Requests\UpdateImageProductRequest;
 use App\Repositories\CategoryRepository;
@@ -162,7 +164,12 @@ class ProductServiceImpl implements ProductService
 
             throw new ApiException("product tidak ditemukan");
         }
-        return $this->productRepository->getByUuid($uuid);
+        $product = $this->productRepository->getByUuid($uuid);
+        $product->link = url()->previous() . "/api/products/" . $product->uuid;
+        // foreach ($products as $product) {
+        //     $product->link = url()->previous() . "/api/products/" . $product->uuid;
+        // }
+        return $product;
     }
 
     /**
@@ -194,20 +201,23 @@ class ProductServiceImpl implements ProductService
 
             unset($payload["_method"]);
 
-            $new_stock = 0;
+            $newStock = 0;
 
-            if ($payload['add_or_reduce_stock'] == "add") {
-                $new_stock = $currentProduct->stock + $payload['quantity_stok'];
-            } else if ($payload['add_or_reduce_stock'] == "reduce") {
-                $new_stock = $currentProduct->stock - $payload['quantity_stok'];
-            } else {
-                throw new ApiException("gagal update produk add_or_reduce_stok barus berisi add atau reduce", 404);
+            switch ($payload['add_or_reduce_stock']) {
+                case "add":
+                    $newStock = $currentProduct->stock + $payload['quantity_stok'];
+                    break;
+                case "reduce":
+                    $newStock = $currentProduct->stock - $payload['quantity_stok'];
+                    break;
+                default:
+                    throw new ApiException("gagal update produk add_or_reduce_stok barus berisi add atau reduce", 404);
             }
 
             $this->productRepository->updateByUuid($uuid, [
                 "name" => $payload['name'],
                 "barcode" => $payload['barcode'],
-                "stock" => $new_stock,
+                "stock" => $newStock,
                 "selling_price" => $payload['selling_price'],
                 "purchase_price" => $payload['purchase_price'],
             ]);
@@ -255,6 +265,60 @@ class ProductServiceImpl implements ProductService
             ]);
             return $this->productRepository->getByUuid($uuid);
         } catch (\Throwable $th) {
+            throw new ApiException($th->getMessage());
+        }
+    }
+    /**
+     * @inheritDoc
+     */
+    public function getProductByCategory($category)
+    {
+        try {
+            $link = $category;
+            $category = str_replace('-', ' ', $category);
+            $product = $this->productRepository->getByCategory($category)->first();
+            $product->link = url()->previous() . "/api/categories/{$link}/products";
+            return $product;
+        } catch (\Throwable $th) {
+            throw new ApiException($th->getMessage());
+        }
+    }
+    /**
+     * @inheritDoc
+     */
+    public function addCategoriesToProduct(CategoryUpdateRequest $request, string $productUuid)
+    {
+        $requestValid = $request->validated();
+
+        DB::beginTransaction();
+        try {
+            if (!$this->productRepository->findByUuid($productUuid)->exists()) throw new ApiException('product tidak dittemukan', 404);
+
+            $this->productRepository->addCategoriesToProduct($productUuid, $requestValid['category_id']);
+            DB::commit();
+            return $this->productRepository->getByUuid($productUuid);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw new ApiException($th->getMessage());
+        }
+    }
+    /**
+     * @inheritDoc
+     */
+    public function deleteCategoriesInProduct(CategoryUpdateRequest $request, string $productUuid)
+    {
+        $validated =  $request->validated();
+
+        DB::beginTransaction();
+        try {
+            if (!$this->productRepository->findByUuid($productUuid)->exists()) throw new ApiException('product tidak ditemukan');
+            foreach ($validated['category_id'] as $valid) {
+                if (!$this->categoryRepository->findById($valid)) throw new ApiException('product tidak ditemukan');
+            }
+            DB::commit();
+            return $this->productRepository->deleteCategoriesInProduct($productUuid, $validated['category_id']);
+        } catch (\Throwable $th) {
+            DB::rollBack();
             throw new ApiException($th->getMessage());
         }
     }
