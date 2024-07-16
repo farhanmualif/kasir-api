@@ -31,7 +31,7 @@ jobs:
 
       - name: Set Permission
         run: |
-          ssh -o StrictHostKeyChecking=no -i "${{ secrets.EC2_SSH_KEY_DEV }}" ubuntu@ec2-52-64-154-170.ap-southeast-2.compute.amazonaws.com "
+          ssh -o StrictHostKeyChecking=no -i "${{ secrets.EC2_SSH_KEY_DEV }}" ubuntu@ec2-52-64-154-170.ap-southeast-2.compute.amazonaws.com"
             sudo chown -R www-data:www-data /var/www/kasir-api/storage
             sudo chmod -R 775 /var/www/kasir-api/storage
             sudo chown -R www-data:www-data /var/www/kasir-api/storage/logs
