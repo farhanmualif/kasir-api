@@ -31,7 +31,7 @@ jobs:
             sudo update-alternatives --set php-fpm /usr/sbin/php-fpm8.2
             php -v
             eval $(ssh-agent -s)
-            ssh-add /path/to/your/private/key
+            ssh-add ~/.ssh/id_rsa
             git config --global --add safe.directory /var/www/kasir-api
             cd /var/www/kasir-api
             git pull origin dev
