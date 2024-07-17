@@ -32,6 +32,13 @@ jobs:
       - name: Set Permission
         run: |
           ssh -o StrictHostKeyChecking=no -i "${{ secrets.EC2_SSH_KEY_DEV }}" ubuntu@ec2-52-64-154-170.ap-southeast-2.compute.amazonaws.com "
+            git config --global --add safe.directory /var/www/kasir-api
+            cd /var/www/kasir-api
+            git pull origin dev
+            composer install
+            php artisan migrate
+            php artisan config:cache
+            php artisan route:cache
             sudo chown -R www-data:www-data /var/www/kasir-api/storage
             sudo chmod -R 775 /var/www/kasir-api/storage
             sudo chown -R www-data:www-data /var/www/kasir-api/storage/logs
