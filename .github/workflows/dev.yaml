@@ -15,6 +15,11 @@ jobs:
       - name: Checkout the files
         uses: actions/checkout@v2
 
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY_DEV }}
+
       - name: Deploy to EC2
         uses: easingthemes/ssh-deploy@main
 
@@ -23,11 +28,6 @@ jobs:
           REMOTE_HOST: ${{ secrets.HOST_DNS_DEV }}
           REMOTE_USER: ${{ secrets.USERNAME_DEV }}
           TARGET: ${{ secrets.HOST_DNS_DEV }}
-
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY_DEV }}
 
       - name: Set Permission
         run: |
