@@ -1,6 +1,5 @@
 name: Push-to-Dev
 
-# Trigger deployment only on push to master branch
 on:
   push:
     branches:
@@ -21,32 +20,18 @@ jobs:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY_DEV }}
 
       - name: Deploy to EC2
-        uses: easingthemes/ssh-deploy@main
-
-        with:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY_DEV }}
-          REMOTE_HOST: ${{ secrets.HOST_DNS_DEV }}
-          REMOTE_USER: ${{ secrets.USERNAME_DEV }}
-          TARGET: ${{ secrets.HOST_DNS_DEV }}
-
-      - name: Pull Project
         run: |
-          ssh -o StrictHostKeyChecking=no -i "${{ secrets.EC2_SSH_KEY_DEV }}" ubuntu@ec2-52-64-154-170.ap-southeast-2.compute.amazonaws.com "
-          git config --global --add safe.directory /var/www/kasir-api
-          cd /var/www/kasir-api
-          git pull origin dev
-          composer install
-
-      - name: Setup Laravel
-        run: |
-          php artisan migrate
-          php artisan config:cache
-          php artisan route:cache
-
-      - name: Set Permission
-        run: |
-          sudo chown -R www-data:www-data /var/www/kasir-api/storage
-          sudo chmod -R 775 /var/www/kasir-api/storage
-          sudo chown -R www-data:www-data /var/www/kasir-api/storage/logs
-          sudo chmod -R 775 /var/www/kasir-api/storage/logs
-          sudo systemctl restart nginx "
+          ssh -o StrictHostKeyChecking=no -i "${{ secrets.EC2_SSH_KEY_DEV }}" ubuntu@${{ secrets.HOST_DNS_DEV }} << 'EOF'
+            git config --global --add safe.directory /var/www/kasir-api
+            cd /var/www/kasir-api
+            git pull origin dev
+            composer install --no-dev --prefer-dist --optimize-autoloader
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            sudo chown -R www-data:www-data storage
+            sudo chmod -R 775 storage
+            sudo chown -R www-data:www-data storage/logs
+            sudo chmod -R 775 storage/logs
+            sudo systemctl restart nginx
+          EOF
