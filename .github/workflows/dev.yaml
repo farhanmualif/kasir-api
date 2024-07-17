@@ -29,18 +29,24 @@ jobs:
           REMOTE_USER: ${{ secrets.USERNAME_DEV }}
           TARGET: ${{ secrets.HOST_DNS_DEV }}
 
-      - name: Set Permission
+      - name: Pull Project
         run: |
           ssh -o StrictHostKeyChecking=no -i "${{ secrets.EC2_SSH_KEY_DEV }}" ubuntu@ec2-52-64-154-170.ap-southeast-2.compute.amazonaws.com "
-            git config --global --add safe.directory /var/www/kasir-api
-            cd /var/www/kasir-api
-            git pull origin dev
-            composer install
-            php artisan migrate
-            php artisan config:cache
-            php artisan route:cache
-            sudo chown -R www-data:www-data /var/www/kasir-api/storage
-            sudo chmod -R 775 /var/www/kasir-api/storage
-            sudo chown -R www-data:www-data /var/www/kasir-api/storage/logs
-            sudo chmod -R 775 /var/www/kasir-api/storage/logs
-            sudo systemctl restart nginx "
+          git config --global --add safe.directory /var/www/kasir-api
+          cd /var/www/kasir-api
+          git pull origin dev
+          composer install
+
+      - name: Setup Laravel
+        run: |
+          php artisan migrate
+          php artisan config:cache
+          php artisan route:cache
+
+      - name: Set Permission
+        run: |
+          sudo chown -R www-data:www-data /var/www/kasir-api/storage
+          sudo chmod -R 775 /var/www/kasir-api/storage
+          sudo chown -R www-data:www-data /var/www/kasir-api/storage/logs
+          sudo chmod -R 775 /var/www/kasir-api/storage/logs
+          sudo systemctl restart nginx "
