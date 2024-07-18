@@ -12,7 +12,7 @@ use Ramsey\Uuid\Uuid;
 
 class UserServiceImpl implements UserService
 {
-    public function __construct(public UserRepository $userRepository, public Logger $logging,public StoreRepository $storeRepository)
+    public function __construct(public UserRepository $userRepository, public Logger $logging, public StoreRepository $storeRepository)
     {
     }
 
@@ -102,11 +102,10 @@ class UserServiceImpl implements UserService
 
             /** check any user in database */
 
+            $payload["uuid"] = Uuid::uuid4();
+
             if ($this->userRepository->findByEmail($payload['email'])) {
-                return [
-                    'status' => false,
-                    'data' => null
-                ];
+                throw new ApiException('email sudah dipakai', 409);
             }
 
             /* insert user */
@@ -115,7 +114,7 @@ class UserServiceImpl implements UserService
             /* create store */
             $createStore = $this->storeRepository->create([
                 'uuid' => Uuid::uuid4()->toString(),
-                'name' => $createUser->name . '_store',
+                'name' => "{$createUser->name}_store",
                 'address' => $payload['address'],
                 'user_id' => $createUser->id
             ]);
@@ -167,7 +166,7 @@ class UserServiceImpl implements UserService
     {
         $findUser = $this->userRepository->findByUuid($uuid);
         if (!$findUser) {
-             throw new ApiException('user tidak ditemukan');;
+            throw new ApiException('user tidak ditemukan');;
         }
         return $findUser;
     }

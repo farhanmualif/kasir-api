@@ -4,13 +4,13 @@
 namespace App\Services;
 
 use App\Exceptions\ApiException;
-use App\Http\Requests\AddCategoryToProductRequest;
 use App\Http\Requests\CategoryUpdateRequest;
 use App\Http\Requests\ProductUpdateRequest;
 use App\Http\Requests\UpdateImageProductRequest;
 use App\Repositories\CategoryRepository;
 use App\Repositories\ProductRepository;
 use App\Repositories\PurchasingRepository;
+
 use App\Repositories\StoreRepository;
 use App\Services\FileService;
 use App\Services\ProductService;
@@ -42,9 +42,14 @@ class ProductServiceImpl implements ProductService
                 throw new ApiException('barcode sudah digunakan');
             }
 
+            if ($request['selling_price'] < $request['purchase_price']) {
+                throw new ApiException('harga jual tidak boleh kurang dari harga beli');
+            }
+
             $filename = $request->hasFile('image')
                 ? $this->fileService->uploadProductImage($request, time() . '.' . $request->image->extension())
                 : "product-default.png";
+
 
             $insertProduct = $this->productRepository->create([
                 "name" => $request['name'],
