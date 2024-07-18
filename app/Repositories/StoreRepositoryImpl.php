@@ -8,12 +8,16 @@ use App\Repositories\StoreRepository;
 class StoreRepositoryImpl implements StoreRepository
 {
 
+    public function __construct(public Store $store)
+    {
+    }
+
     /**
      * @inheritDoc
      */
     public function create(array $data)
     {
-        return Store::create($data);
+        return $this->store->crete($data);
     }
 
     /**
@@ -21,7 +25,7 @@ class StoreRepositoryImpl implements StoreRepository
      */
     public function delete($id)
     {
-        return Store::destroy($id);
+        return $this->store->find($id)->delete();
     }
 
     /**
@@ -29,8 +33,7 @@ class StoreRepositoryImpl implements StoreRepository
      */
     public function findById($id)
     {
-
-        return Store::find($id)->exists();
+        return $this->store->where('id', $id)->exists();
     }
 
     /**
@@ -38,7 +41,7 @@ class StoreRepositoryImpl implements StoreRepository
      */
     public function findByUuid($uuid)
     {
-        return Store::where("uuid", $uuid)->exists();
+        return $this->store->where("uuid", $uuid)->exists();
     }
 
     /**
@@ -46,7 +49,7 @@ class StoreRepositoryImpl implements StoreRepository
      */
     public function getByid($id)
     {
-        return Store::findOrFail($id)->first();
+        return $this->store->findOrFail($id)->first();
     }
 
     /**
@@ -54,7 +57,7 @@ class StoreRepositoryImpl implements StoreRepository
      */
     public function getByUuid($uuid)
     {
-        return Store::where("uuid", $uuid)->first();
+        return $this->store->where("uuid", $uuid)->first();
     }
 
     /**
@@ -62,6 +65,7 @@ class StoreRepositoryImpl implements StoreRepository
      */
     public function getByd($id)
     {
+        return $this->store->find($id);
     }
 
     /**
@@ -69,6 +73,7 @@ class StoreRepositoryImpl implements StoreRepository
      */
     public function updateById($id,  $data)
     {
+        return $this->store->find($id)->update($data);
     }
 
     /**
@@ -76,13 +81,14 @@ class StoreRepositoryImpl implements StoreRepository
      */
     public function updateByUuid($uuid,  $data)
     {
+        return $this->store->where('uuid', $uuid)->update($data);
     }
     /**
      * @inheritDoc
      */
     public function deleteById($id)
     {
-        return Store::destroy($id);
+        return $this->store->destroy($id);
     }
 
     /**
@@ -90,15 +96,13 @@ class StoreRepositoryImpl implements StoreRepository
      */
     public function deleteByUuid($uuid)
     {
-        return Store::where('uuid', $uuid)->delete();
+        return $this->store->where('uuid', $uuid)->delete();
     }
     /**
      * @inheritDoc
      */
     public function deleteByUserUuid($userUuid)
     {
-        $store = new Store();
-
-        return $store->user()->where('uuid', $userUuid)->delete();
+        return  $this->store->user()->where('uuid', $userUuid)->delete();
     }
 }

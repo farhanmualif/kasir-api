@@ -39,11 +39,11 @@ class ProductServiceImpl implements ProductService
         try {
 
             if ($this->productRepository->findByBarcode($request['barcode'])) {
-                throw new ApiException('barcode sudah digunakan');
+                throw new ApiException('Barcode sudah digunakan. Silakan gunakan barcode yang berbeda.');
             }
 
             if ($request['selling_price'] < $request['purchase_price']) {
-                throw new ApiException('harga jual tidak boleh kurang dari harga beli');
+                throw new ApiException('Harga jual tidak boleh lebih rendah dari harga beli. Pastikan harga jual lebih tinggi atau sama dengan harga beli.');
             }
 
             $filename = $request->hasFile('image')
