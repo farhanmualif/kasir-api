@@ -4,7 +4,7 @@ namespace App\Repositories;
 
 interface StoreRepository
 {
-    public function create(array $data);
+    public function create($data);
     public function updateById($id,  $data);
     public function updateByUuid($uuid,  $data);
     public function deleteById($id);

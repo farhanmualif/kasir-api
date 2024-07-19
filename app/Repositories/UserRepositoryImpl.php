@@ -8,56 +8,60 @@ use Laravel\Sanctum\PersonalAccessToken;
 class UserRepositoryImpl implements UserRepository
 {
 
+    public function __construct(public User $user)
+    {
+    }
+
     function getAll()
     {
-        return User::all();
+        return $this->user->all();
     }
     function findById($id)
     {
-        return User::where('id', $id)->exists();
+        return $this->user->where('id', $id)->exists();
     }
     function findByUuid($uuid)
     {
-        return User::where('uuid', $uuid)->exists();
+        return $this->user->where('uuid', $uuid)->exists();
     }
 
     function getById($id)
     {
 
-        return User::find($id)->first();
+        return $this->user->find($id)->first();
     }
     function getByUuid(string $uuid)
     {
-        return User::where('uuid', $uuid)->first();
+        return $this->user->where('uuid', $uuid)->first();
     }
     function getByEmail($email)
     {
-        return User::where('email', $email)->first();
+        return $this->user->where('email', $email)->first();
     }
     function create($user)
     {
-        return User::create($user);
+        return $this->user->create($user);
     }
     function deleteById($id)
     {
-        return User::destroy($id);
+        return $this->user->destroy($id);
     }
     function deleteByUuid($uuid)
     {
-        return User::where('uuid', $uuid)->delete();
+        return $this->user->where('uuid', $uuid)->delete();
     }
     function deleteByEmail($email)
     {
-        return User::where('email', $email)->delete();
+        return $this->user->where('email', $email)->delete();
     }
     function updateByEmail($email, $payload)
     {
-        return User::where('email', $email)->update($payload);
+        return $this->user->where('email', $email)->update($payload);
     }
 
     public function findByEmail(string $email)
     {
-        return User::where('email', $email)->exists();
+        return $this->user->where('email', $email)->exists();
     }
     public function deleteToken(string $tokenId)
     {
@@ -80,7 +84,7 @@ class UserRepositoryImpl implements UserRepository
      */
     public function updateById(string $id, array $payload)
     {
-        return User::where('id', $id)->update($payload);
+        return $this->user->where('id', $id)->update($payload);
     }
 
     /**
@@ -88,10 +92,9 @@ class UserRepositoryImpl implements UserRepository
      */
     public function updateByUuid(string $uuid, array $payload)
     {
-        return User::where('uuid', $uuid)->update($payload);
+        return $this->user->where('uuid', $uuid)->update($payload);
     }
     /**
      * @inheritDoc
      */
-
 }

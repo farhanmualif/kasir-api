@@ -3,11 +3,14 @@
 namespace App\Services;
 
 use App\Exceptions\ApiException;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\StoreStoreRequest;
 use App\Repositories\StoreRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Ramsey\Uuid\Uuid;
 
 class UserServiceImpl implements UserService
@@ -43,14 +46,14 @@ class UserServiceImpl implements UserService
     /**
      * @inheritDoc
      */
-    public function login(array $payload, $request)
+    public function login(LoginRequest $request)
     {
         try {
-
+            $payload = $request->validated();
             $checkUser = $this->userRepository->findByEmail($payload['email']);
 
             if (!$checkUser) {
-                throw new ApiException('user tidak ditemukan');
+                throw new ApiException('user tidak ditemukan', 404);
             }
 
             if (Auth::attempt(['email' => $payload['email'], 'password' => $payload['password']])) {
@@ -63,23 +66,12 @@ class UserServiceImpl implements UserService
 
                 $this->logging->info('User logged in successfully with Email: ' . $request->user()['email']);
 
-                return
-                    [
-                        'status' => true,
-                        'data' => $success
-                    ];
+                return $success;
             } else {
-
-                return [
-                    'status' => false,
-                    'data' => 'tidak dapat login'
-                ];
+                throw new ApiException('username atau password salah', 401);
             }
         } catch (\Throwable $th) {
-            return [
-                'status' => false,
-                'data' => $th
-            ];
+            throw new ApiException($th->getMessage());
         }
     }
 
@@ -88,14 +80,18 @@ class UserServiceImpl implements UserService
      */
     public function logout($token)
     {
-        $this->logging->channel('info')->info('User logged out successfully with ID: ' . auth()->id());
-        return $this->userRepository->revokeCurrentToken($token);
+        try {
+            $this->logging->channel('info')->info('User logged out successfully with ID: ' . auth()->id());
+            return $this->userRepository->revokeCurrentToken($token);
+        } catch (\Throwable $th) {
+            throw new ApiException($th->getMessage());
+        }
     }
 
     /**
      * @inheritDoc
      */
-    public function register(array $payload)
+    public function register(StoreStoreRequest $payload)
     {
         DB::beginTransaction();
         try {
@@ -109,7 +105,12 @@ class UserServiceImpl implements UserService
             }
 
             /* insert user */
-            $createUser = $this->userRepository->create($payload);
+
+            $createUser = $this->userRepository->create([
+                'name' => $payload['name'],
+                'email' => $payload['email'],
+                'password' => Hash::make($payload['password']),
+            ]);
 
             /* create store */
             $createStore = $this->storeRepository->create([
@@ -126,7 +127,7 @@ class UserServiceImpl implements UserService
                 'address' => $createStore->address
             ];
 
-            $this->logging->info('User register successfully with Email: ' . $createUser->email);
+            $this->logging->info("User register successfully with Email: {$createUser->email}");
 
             DB::commit();
             return $response;

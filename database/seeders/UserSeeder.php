@@ -32,7 +32,7 @@ class UserSeeder extends Seeder
 
             Store::create([
                 'uuid' => Uuid::uuid4(),
-                'name' => 'store_' . $newUser->name,
+                'name' => "store_{$newUser->name}",
                 'user_id' =>  $newUser->id,
                 'address' => 'yogyakarta',
             ]);

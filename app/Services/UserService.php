@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\StoreStoreRequest;
 
 interface UserService
 {
-    public function register(array $payload);
-    public function login(array $payload, $request);
+    public function register(StoreStoreRequest $payload);
+    public function login(LoginRequest $payload);
     public function logout($request);
     public function getAll();
     public function getUserById(int $id);

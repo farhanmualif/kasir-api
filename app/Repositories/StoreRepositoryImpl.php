@@ -15,9 +15,9 @@ class StoreRepositoryImpl implements StoreRepository
     /**
      * @inheritDoc
      */
-    public function create(array $data)
+    public function create($data)
     {
-        return $this->store->crete($data);
+        return $this->store->create($data);
     }
 
     /**

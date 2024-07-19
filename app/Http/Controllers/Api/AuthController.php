@@ -21,33 +21,15 @@ class AuthController extends Controller
 
     public function register(StoreStoreRequest $request)
     {
-        try {
-            $validated = $request->validated();
-            $createUser = $this->userServices->register($validated);
-
-            return responseJson('Berhasil menambahkan data user', $createUser['data'], true, 200);
-        } catch (\Exception $th) {
-
-            // Generic exception handling
-            return responseJson("Gagal menambahkan user, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
-        }
+        $createUser = $this->userServices->register($request);
+        return responseJson('Berhasil menambahkan data user', $createUser, true, 200);
     }
 
 
     public function login(LoginRequest $request)
     {
-        try {
-            $payload = $request->validated();
-            $loginUser = $this->userServices->login($payload, $request);
-
-            if (!$loginUser['status']) {
-                return responseJson("email / password tidak ditemukan", null, false, 404);
-            }
-
-            return responseJson("berhasil login", $loginUser['data'], true, 202);
-        } catch (\Throwable $th) {
-            return responseJson("Gagal melakukan login, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
-        }
+        $loginUser = $this->userServices->login($request);
+        return responseJson("berhasil login", $loginUser, true, 202);
     }
 
     public function authenticated()
