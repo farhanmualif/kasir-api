@@ -37,6 +37,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('product/upload', [ProductController::class, 'uploadImage']);
     Route::put('products/{uuid}/image', [ProductController::class, 'updateImage']);
     Route::get('categories/{categoryName}/products', [ProductController::class, 'showByCategory']);
+    Route::get('products/images/{uuid}', [ProductController::class, 'showImage']);
     Route::post('categories/{productUuid}/products', [ProductController::class, 'addCategoriesToProduct']);
     Route::delete('categories/{productUuid}/products', [ProductController::class, 'removeCategoriesFromProduct']);
     Route::put('categories/{uuid}/product', [CategoryController::class, 'updateByProductUuid']);

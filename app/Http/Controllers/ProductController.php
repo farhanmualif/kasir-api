@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\AddCategoryToProductRequest;
+
 use App\Http\Requests\CategoryUpdateRequest;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
 use App\Http\Requests\UpdateImageProductRequest;
 use App\Http\Resources\ProductCollection;
+use App\Models\Product;
+use App\Services\FileService;
 use App\Services\ProductService;
 
 
@@ -15,7 +17,7 @@ use App\Services\ProductService;
 class ProductController extends Controller
 {
 
-    public function __construct(public ProductService $productServices)
+    public function __construct(public ProductService $productServices, public FileService $fileService)
     {
     }
 
@@ -46,6 +48,11 @@ class ProductController extends Controller
     {
         $product = $this->productServices->getProductByUuid($id);
         return responseJson("produk ditemukan", new ProductCollection($product));
+    }
+    public function showImage(string $uuid)
+    {
+        $productImage = $this->fileService->getProductImage($uuid);
+        return response()->file($productImage);
     }
 
     public function showByCategory(string $categoryName)
