@@ -11,8 +11,7 @@ use App\Http\Resources\ProductCollection;
 use App\Models\Product;
 use App\Services\FileService;
 use App\Services\ProductService;
-
-
+use Illuminate\Http\Response;
 
 class ProductController extends Controller
 {
@@ -51,8 +50,15 @@ class ProductController extends Controller
     }
     public function showImage(string $uuid)
     {
-        $productImage = $this->fileService->getProductImage($uuid);
-        return response()->file($productImage);
+        // Dapatkan path gambar dari fileService
+        $productImagePath = $this->fileService->getProductImage($uuid);
+
+        // Dapatkan MIME type dari file
+        $mimeType = mime_content_type($productImagePath);
+
+        return response()->file($productImagePath, [
+            "Content-Type" => $mimeType,
+        ]);
     }
 
     public function showByCategory(string $categoryName)
