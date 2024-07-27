@@ -11,6 +11,7 @@ interface ProductRepository
     public function findById(int $id);
     public function findByUuid(string $uuid);
     public function findByBarcode(string $barcode);
+    public function findByStoreId(int $storeId);
     public function getAll();
     public function getById(int $id);
     public function getByUuid(string $uuid);

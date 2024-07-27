@@ -18,7 +18,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        return $this->categoryService->getAll();
+        return responseJson('category_ditemukan', $this->categoryService->getAll());
     }
 
     /**

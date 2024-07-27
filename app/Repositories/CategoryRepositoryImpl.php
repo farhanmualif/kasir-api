@@ -3,7 +3,10 @@
 
 namespace App\Repositories;
 
+use App\Exceptions\ApiException;
 use App\Models\Category;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CategoryRepositoryImpl implements CategoryRepository
@@ -18,7 +21,11 @@ class CategoryRepositoryImpl implements CategoryRepository
      */
     public function create($data)
     {
-        return $this->category->create($data);
+        try {
+            return $this->category->create($data);
+        } catch (\Throwable $th) {
+            throw new ApiException($th->getMessage());
+        }
     }
 
     /**
@@ -42,19 +49,27 @@ class CategoryRepositoryImpl implements CategoryRepository
      */
     public function getAll()
     {
-        return $this->category->select(
-            'categories.id as id',
-            'categories.uuid as uuid',
-            'categories.name as name',
-            'categories.created_at',
-            'categories.updated_at',
-            DB::raw('COALESCE(SUM(products.purchase_price * products.stock), 0) as capital'),
-            DB::raw('CAST(COALESCE(SUM(products.stock), 0) AS SIGNED) as remaining_stock')
-        )
-            ->leftJoin('product_category', 'categories.id', '=', 'product_category.category_id')
-            ->leftJoin('products', 'product_category.product_id', '=', 'products.id')
-            ->groupBy('categories.id', 'categories.name')
-            ->get();
+        try {
+            $storeId = Auth::user()->stores->first()->id;
+
+            return $this->category->select(
+                'categories.id as id',
+                'categories.uuid as uuid',
+                'categories.name as name',
+                DB::raw('COALESCE(SUM(products.purchase_price * products.stock), 0) as capital'),
+                DB::raw('CAST(COALESCE(SUM(products.stock), 0) AS SIGNED) as remaining_stock'),
+                'categories.created_at',
+                'categories.updated_at'
+            )
+                ->leftJoin('product_category', 'product_category.category_id', 'categories.id')
+                ->leftJoin('products', 'product_category.product_id', 'products.id')
+                ->where('categories.store_id', '=', $storeId)
+                ->groupBy('categories.id', 'categories.uuid', 'categories.name', 'categories.created_at', 'categories.updated_at')
+                ->get();
+            // dd($categories);
+        } catch (\Throwable $th) {
+            throw new ApiException($th->getMessage());
+        }
     }
 
     /**
@@ -109,5 +124,18 @@ class CategoryRepositoryImpl implements CategoryRepository
     public function getByName(string $name)
     {
         return $this->category->where('name', $name);
+    }
+    /**
+     * @inheritDoc
+     */
+    public function getByStoreId(int $storeId)
+    {
+        try {
+            return $this->category->whereHas('store', function ($query) use ($storeId) {
+                $query->where('stores.id', $storeId);
+            })->with('store')->get();
+        } catch (\Throwable $th) {
+            throw new ApiException($th->getMessage());
+        }
     }
 }

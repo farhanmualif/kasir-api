@@ -8,10 +8,8 @@ use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
 use App\Http\Requests\UpdateImageProductRequest;
 use App\Http\Resources\ProductCollection;
-use App\Models\Product;
 use App\Services\FileService;
 use App\Services\ProductService;
-use Illuminate\Http\Response;
 
 class ProductController extends Controller
 {
@@ -53,6 +51,7 @@ class ProductController extends Controller
         // Dapatkan path gambar dari fileService
         $productImagePath = $this->fileService->getProductImage($uuid);
 
+
         // Dapatkan MIME type dari file
         $mimeType = mime_content_type($productImagePath);
 
@@ -63,7 +62,8 @@ class ProductController extends Controller
 
     public function showByCategory(string $categoryName)
     {
-        return responseJson("produk ditemukan", new ProductCollection($this->productServices->getProductByCategory($categoryName)));
+        // dd($this->productServices->getProductByCategory($categoryName));
+        return responseJson("produk ditemukan", ProductCollection::collection($this->productServices->getProductByCategory($categoryName)));
     }
 
     public function addCategoriesToProduct(CategoryUpdateRequest $request, string $productUuid)

@@ -44,6 +44,7 @@ class ProductSeeder extends Seeder
 
         foreach ($products as $product) {
             $insert_product = Product::create($product);
+            $insert_product->stores()->attach(1);
             $total_payment = $insert_product->purchase_price * $insert_product->stock;
 
             Purchasing::create([

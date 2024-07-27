@@ -31,7 +31,6 @@ class ProductStoreRequest extends FormRequest
             "purchase_price" =>  'required|numeric',
             "image" =>  'image:jpeg,png,jpg,gif,svg|max:10240',
             "category_id" => 'numeric|nullable',
-            "store_id" => 'required|integer'
         ];
     }
 
@@ -71,10 +70,5 @@ class ProductStoreRequest extends FormRequest
             'description.nullable' => 'Deskripsi boleh kosong.',
             'description.max' => 'Deskripsi tidak boleh lebih dari 200 karakter.',
         ];
-    }
-
-    public function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(\responseJson('Validation error', $validator->errors(), false, 422));
     }
 }

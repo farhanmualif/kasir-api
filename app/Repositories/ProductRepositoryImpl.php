@@ -4,12 +4,14 @@ namespace App\Repositories;
 
 use App\Models\Category;
 use App\Models\Product;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class ProductRepositoryImpl implements ProductRepository
 {
 
-    public function __construct(public Product $product, public Category $category)
+    public function __construct(public Product $product, public Category $category, public AuthManager $auth)
     {
     }
 
@@ -18,6 +20,7 @@ class ProductRepositoryImpl implements ProductRepository
      */
     public function create(array $data)
     {
+        $data['uuid'] =  Str::uuid();
         return $this->product->create($data);
     }
 
@@ -75,7 +78,11 @@ class ProductRepositoryImpl implements ProductRepository
      */
     public function getAll()
     {
-        return $this->product->with("category");
+        $storeId =  $this->auth->user()->stores()->first()->id;
+
+        return $this->product->whereHas('stores', function ($query) use ($storeId) {
+            $query->where('stores.id', $storeId);
+        })->with(['category', 'stores']);
     }
 
     /**
@@ -143,7 +150,11 @@ class ProductRepositoryImpl implements ProductRepository
 
         $products = $this->product->whereHas('category', function ($query) use ($category) {
             $query->where('name', $category);
-        })->get();;
+        })
+            ->join('product_store', 'product_store.product_id', '=', 'products.id')
+            ->join('stores', 'product_store.store_id', '=', 'stores.id')
+            ->where('stores.id', '=', Auth::user()->stores->first()->id)
+            ->select('products.*');
 
         return $products;
     }
@@ -163,5 +174,15 @@ class ProductRepositoryImpl implements ProductRepository
         $product = $this->product->where('uuid', $productUuid)->first();
         $product->category()->detach($categoriesId);
         return $this->getByUuid($productUuid);
+    }
+    /**
+     * @inheritDoc
+     */
+    public function findByStoreId(int $storeId)
+    {
+
+        return $this->product->whereHas('stores', function ($query) use ($storeId) {
+            $query->where('stores.id', $storeId);
+        })->with('stores')->get();
     }
 }

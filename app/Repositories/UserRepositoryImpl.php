@@ -63,6 +63,7 @@ class UserRepositoryImpl implements UserRepository
     {
         return $this->user->where('email', $email)->exists();
     }
+
     public function deleteToken(string $tokenId)
     {
         return PersonalAccessToken::where('id', $tokenId)->delete();
@@ -94,7 +95,5 @@ class UserRepositoryImpl implements UserRepository
     {
         return $this->user->where('uuid', $uuid)->update($payload);
     }
-    /**
-     * @inheritDoc
-     */
+    
 }

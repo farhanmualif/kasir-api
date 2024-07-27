@@ -2,15 +2,15 @@
 
 namespace App\Services;
 
-use App\Http\Requests\AddCategoryToProductRequest;
 use App\Http\Requests\CategoryUpdateRequest;
 use App\Http\Requests\ProductUpdateRequest;
 use App\Http\Requests\UpdateImageProductRequest;
-use Illuminate\Http\Request;
+use App\Http\Requests\ProductStoreRequest;
+
 
 interface ProductService
 {
-    public function create(Request $request);
+    public function create(ProductStoreRequest $request);
     public function addCategoriesToProduct(CategoryUpdateRequest $request, string $productUuid);
     public function deleteCategoriesInProduct(CategoryUpdateRequest $request, string $productUuid);
     public function getAll();

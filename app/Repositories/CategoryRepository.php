@@ -7,6 +7,7 @@ interface CategoryRepository
     public function getAll();
     public function create($data);
     public function getById(int $id);
+    public function getByStoreId(int $id);
     public function getByUuid(string $uuid);
     public function getByName(string $name);
     public function findById(int $id);

@@ -29,10 +29,12 @@ class TransactionServiceImpl implements TransactionService
             $transaction = $payloadValidate['transaction'];
             $totalPayment = 0;
             $products = [];
+            $storeId = [];
 
             foreach ($transaction['items'] as $item) {
 
                 $findProduct = $this->productRepository->findById($item['id_product']);
+                $storeId[] = $findProduct->stores()->first()->id;
 
                 if (!$findProduct) {
                     throw new ApiException("product dengan id {$item['id_product']} tidak ditemukan");
@@ -50,10 +52,16 @@ class TransactionServiceImpl implements TransactionService
                 }
             }
 
+            // validation, whether the Products are from different stores
+            $count = array_count_values($storeId);
+            if (count($count) !== 1) {
+                throw new ApiException('Transaksi tidak dapat diproses. Produk berasal dari toko yang berbeda.');
+            }
+
 
             foreach ($transaction['items'] as $item) {
                 $currenProduct = $products[$item['id_product']];
-                $totalPayment += ($item['quantity'] * $currenProduct->selling_price);
+                $totalPayment += $item['quantity'] * $currenProduct->selling_price;
             }
 
             if ($transaction['cash'] < $totalPayment) {

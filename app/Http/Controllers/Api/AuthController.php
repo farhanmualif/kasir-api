@@ -37,7 +37,7 @@ class AuthController extends Controller
         try {
             $auth = auth('sanctum')->check();
             if (!$auth) {
-                return \responseJson("uauthenticated", null, false, 400);
+                return \responseJson("unauthenticated", null, false, 400);
             }
             return \responseJson("authenticated", null);
         } catch (\Throwable $th) {

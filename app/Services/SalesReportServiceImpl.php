@@ -20,57 +20,52 @@ class SalesReportServiceImpl implements SalesReportService
     {
 
         try {
-            $date = Carbon::createFromFormat("Y-m-d", $date);
-            $day = $date->format('Y-m-d');
 
-            $dailySales = $this->salesReportRepository->daily($day)->get();
+            $dailySales = $this->salesReportRepository->daily($date)->get();
+    
 
             if ($dailySales->count() === 0) {
-                throw new ApiException("data tidak ditemukan", 404);
+                throw new ApiException("data belum tersedia", 404);
             }
 
-            // Group the sales data by no_transaction
-            $groupedData = $dailySales->groupBy('no_transaction');
-
-            $result = [
-                'total_transactions' => $groupedData->count(),
-                'total_revenue' => $dailySales->sum('total_price'),
-                'total_profit' => $dailySales->sum('profit'),
-                "date" => Carbon::parse($dailySales[0]->created_at)->format('M d, Y'),
-                'transactions' => []
-            ];
-
-            // Iterate through each grouped no_transaction
-            foreach ($groupedData as $transactions) {
-                $revenue = $transactions->sum('total_price');
-                $profit = $transactions->sum('profit');
-                $items = [];
-                $timestamps = [];
-
-                // Iterate through each transaction item in the group
-                foreach ($transactions as $transaction) {
-                    $items[] = [
-                        'name' => $transaction->name,
-                        'quantity' => $transaction->quantity,
-                        'price' => $transaction->selling_price,
-                        'total_price' => $transaction->total_price
+            // Mengorganisir data
+            $organizedData = [];
+            foreach ($dailySales as $transaction) {
+                if (!isset($organizedData[$transaction->transaction_id])) {
+                    $organizedData[$transaction->transaction_id] = [
+                        'time' => $transaction->time,
+                        'id_store' => $transaction->store_id,
+                        'revenue' => $transaction->revenue,
+                        'profit' => $transaction->profit,
+                        'no_transaction' => $transaction->no_transaction,
+                        'items' => []
                     ];
-
-                    // Format the timestamp using Carbon
-                    $formattedTimestamp = Carbon::parse($transaction->created_at)->format('H:i:s');
-                    $timestamps[] = $formattedTimestamp;
                 }
 
-                $result['transactions'][] = [
-                    'time' => array_shift($timestamps),
-                    'revenue' => $revenue,
-                    'profit' => $profit,
-                    'no_transaction' => $transaction->no_transaction,
-                    'items' => $items
+                $organizedData[$transaction->transaction_id]['items'][] = [
+                    'id' => $transaction->product_id,
+                    'name' => $transaction->product_name,
+                    'quantity' => $transaction->quantity,
+                    'price' => $transaction->price,
+                    'total_price' => $transaction->total_price
                 ];
             }
 
-            return $result;
+            // Menghitung total
+            $totalTransactions = count($organizedData);
+            $totalRevenue = array_sum(array_column($organizedData, 'revenue'));
+            $totalProfit = array_sum(array_column($organizedData, 'profit'));
+
+            // Menyusun respons
+            $response = [
+                'date' => Carbon::parse($dailySales->first()->created_at)->format('M d, Y'),
+                'total_transactions' => $totalTransactions,
+                'total_revenue' => $totalRevenue,
+                'total_profit' => $totalProfit,
+                'transactions' => array_values($organizedData)
+            ];
+
+            return $response;
         } catch (\Throwable $th) {
             throw new ApiException($th->getMessage());
         }
@@ -82,34 +77,43 @@ class SalesReportServiceImpl implements SalesReportService
     public function getMonthlySales(string $date)
     {
         try {
-            $date = explode("-", $date);
-            $date = "$date[0]-$date[1]";
-            $date = Carbon::createFromFormat("Y-m", $date);
+            // Parse tanggal
+            $date = Carbon::createFromFormat("Y-m-d", $date);
 
-            $monthlySales = $this->salesReportRepository->monthly($date->month, $date->year)->get();
+            $month = $date->month;
+            $year = $date->year;
 
-            $salesData = [
-                'link' => \url()->current(),
-                'total_transactions' => $monthlySales->first()->total_transaction,
-                'total_income' => $monthlySales->sum('income'),
-                'total_profit' => $monthlySales->sum('profit'),
-                'month' => $monthlySales->first()->month,
-                'month_number' => $monthlySales->first()->month_number,
-                'year' => $monthlySales->first()->year,
-                'transactions' => [],
-            ];
+            $data = $this->salesReportRepository->monthly($month, $year)->get();
 
-            foreach ($monthlySales as $sale) {
-                $salesData['transactions'][] = [
-                    'link' => \url()->previous() . "/api/sales/daily/{$sale->year}-{$sale->month_number}-{$sale->day}",
-                    'date' => (string) $sale->day,
-                    'income' => intval($sale->income),
-                    'transaction_amount' => $sale->transaction_amount,
-                    'profit' => intval($sale->profit),
-                ];
+            if (count($data) == 0) {
+                throw new ApiException("data belum tersedia");
             }
 
-            return $salesData;
+
+            $transactions = $data->map(function ($item) use ($year, $month) {
+                return [
+                    "link" => url("/api/sales/daily/{$year}-{$month}-{$item->day}"),
+                    "date" => $item->day,
+                    "income" => $item->income,
+                    "transaction_amount" => $item->transaction_amount,
+                    "profit" => $item->profit
+                ];
+            });
+
+            $result = [
+                [
+                    "link" => url("/api/sales/monthly/{$year}-{$month}"),
+                    "total_transactions" =>  $data->sum('transaction_amount'),
+                    "total_income" => $data->sum('income'),
+                    "total_profit" => $data->sum('profit'),
+                    "month" => date('F', mktime(0, 0, 0, $month, 1)),
+                    "month_number" => (int)$month,
+                    "year" => (int)$year,
+                    "transactions" => $transactions
+                ]
+            ];
+
+            return $result;
         } catch (\Throwable $th) {
             throw new ApiException($th->getMessage());
         }
@@ -127,7 +131,7 @@ class SalesReportServiceImpl implements SalesReportService
 
             $salesData = $this->salesReportRepository->yearly($date->year)->get();
             if ($salesData->count() === 0) {
-                throw new ApiException("data penjulaan tidak ditemukan", 404);
+                throw new ApiException("data belm tersedia", 404);
             }
 
             $data = [
@@ -141,7 +145,7 @@ class SalesReportServiceImpl implements SalesReportService
 
             foreach ($salesData as $sale) {
                 $data['transactions'][] = [
-                    'link' => \url()->previous() . "/api/sale/monthly/{$sale->year}-{$sale->month_number}",
+                    'link' => \url()->previous() . "/api/sales/monthly/{$sale->year}-{$sale->month_number}",
                     'date' => $sale->month,
                     'month_num' => $sale->month_number,
                     'income' => $sale->income,

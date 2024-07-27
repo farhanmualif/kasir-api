@@ -9,6 +9,7 @@ use App\Http\Requests\CategoryUpdateRequest;
 use App\Repositories\CategoryRepository;
 use App\Repositories\ProductRepository;
 use App\Services\CategoryService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CategoryServiceImpl implements CategoryService
@@ -25,8 +26,17 @@ class CategoryServiceImpl implements CategoryService
     {
         try {
             $data = $request->validated();
+            $stores = [];
+            $storeId = Auth::user()->stores->first()->id;
 
-            if ($this->categoryRepository->getByName($data["name"])->first() != null) throw new ApiException("category sudah ada");
+            $findCategory = $this->categoryRepository->getByStoreId($storeId);
+
+            foreach ($findCategory as $store) {
+                array_push($stores, strtolower($store["name"]));
+            }
+
+            if (in_array(strtolower($data['name']), $stores)) throw new ApiException("category sudah ada");
+            $data["store_id"] = $storeId;
             $insertCategory = $this->categoryRepository->create($data);
             return $this->categoryRepository->getById($insertCategory->id);
         } catch (\Throwable $th) {
@@ -137,7 +147,10 @@ class CategoryServiceImpl implements CategoryService
     public function getAll()
     {
         try {
-            return $this->categoryRepository->getAll();
+            return $this->categoryRepository->getAll()->map(function ($category) {
+                $category['link'] = url()->current() . "/{$category->uuid}";
+                return $category;
+            });
         } catch (\Throwable $th) {
             throw new ApiException($th->getMessage(), $th->getCode(), $th);
         }

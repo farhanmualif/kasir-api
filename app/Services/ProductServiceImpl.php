@@ -5,6 +5,7 @@ namespace App\Services;
 
 use App\Exceptions\ApiException;
 use App\Http\Requests\CategoryUpdateRequest;
+use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
 use App\Http\Requests\UpdateImageProductRequest;
 use App\Repositories\CategoryRepository;
@@ -15,8 +16,10 @@ use App\Repositories\StoreRepository;
 use App\Services\FileService;
 use App\Services\ProductService;
 use Exception;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
 use Illuminate\Log\Logger;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -24,25 +27,30 @@ use Illuminate\Support\Facades\Log;
 class ProductServiceImpl implements ProductService
 {
 
-    public function __construct(public Logger $logging, public ProductRepository $productRepository, public FileService $fileService, public PurchasingRepository $purchasingRepository, public StoreRepository $storeRepository, public CategoryRepository $categoryRepository)
+    public function __construct(public Logger $logging, public ProductRepository $productRepository, public FileService $fileService, public PurchasingRepository $purchasingRepository, public StoreRepository $storeRepository, public CategoryRepository $categoryRepository, public AuthManager $auth)
     {
     }
 
     /**
      * @inheritDoc
      */
-    public function create(Request $request)
+    public function create(ProductStoreRequest $request)
     {
-        $request->validated();
-
         DB::beginTransaction();
         try {
+            $payload = $request->validated();
+            $storeId =  $this->auth->user()->stores()->first()->id;
 
-            if ($this->productRepository->findByBarcode($request['barcode'])) {
-                throw new ApiException('Barcode sudah digunakan. Silakan gunakan barcode yang berbeda.');
+            $findBarcodes = [];
+            foreach ($this->productRepository->findByStoreId($storeId) as $products) {
+                array_push($findBarcodes, $products->barcode);
             }
 
-            if ($request['selling_price'] < $request['purchase_price']) {
+            if (in_array($payload['barcode'], $findBarcodes)) {
+                throw new ApiException("barcode sudah digunakan, gunakan barcode yang lain");
+            }
+
+            if ($payload['selling_price'] < $payload['purchase_price']) {
                 throw new ApiException('Harga jual tidak boleh lebih rendah dari harga beli. Pastikan harga jual lebih tinggi atau sama dengan harga beli.');
             }
 
@@ -52,11 +60,11 @@ class ProductServiceImpl implements ProductService
 
 
             $insertProduct = $this->productRepository->create([
-                "name" => $request['name'],
-                "barcode" => $request['barcode'],
-                "stock" => intval($request['stock']),
-                "selling_price" => intval($request['selling_price']),
-                "purchase_price" => intval($request['purchase_price']),
+                "name" => $payload['name'],
+                "barcode" => $payload['barcode'],
+                "stock" => intval($payload['stock']),
+                "selling_price" => intval($payload['selling_price']),
+                "purchase_price" => intval($payload['purchase_price']),
                 "image" => $filename,
             ]);
 
@@ -68,7 +76,7 @@ class ProductServiceImpl implements ProductService
                 'no_purchasing' => generateNoTransaction(),
                 'product_id' => $insertProduct->id,
                 'quantity' => $insertProduct->stock,
-                'description' => $request['description'] ?? "",
+                'description' => $payload['description'] ?? "",
                 'total_payment' => $insertProduct->purchase_price * $insertProduct->stock
             ]);
 
@@ -76,16 +84,20 @@ class ProductServiceImpl implements ProductService
                 throw new ApiException('Gagal menyimpan data pembelian');
             }
 
-            if ($request['category_id'] != null) {
-                $this->categoryRepository->findById($request['category_id']) ? $insertProduct->category()->attach($request['category_id']) :   throw new ApiException('category tidak ditemukan');
+            $categoriesId = [];
+            if ($payload['category_id'] != null) {
+
+                // validasi ada category pada store?
+                $findCategory =  $this->categoryRepository->getByStoreId($storeId);
+                foreach ($findCategory as $category) {
+                    array_push($categoriesId, $category["id"]);
+                }
+
+                if (!in_array($payload['category_id'], $categoriesId)) {
+                    throw new ApiException('category tidak ditemukan');
+                };
             }
 
-            $storeId = intval($request['store_id']);
-            $store = $this->storeRepository->findById($storeId);
-
-            if (!$store) {
-                throw new ApiException('store tidak ditemukan');
-            }
             $insertProduct->stores()->attach($storeId);
 
             DB::commit();
@@ -143,7 +155,6 @@ class ProductServiceImpl implements ProductService
     public function getAll()
     {
         try {
-            //code...
             return $this->productRepository->getAll();
         } catch (\Throwable $th) {
             throw new ApiException('terjadi kesalahan' . $th->getMessage());
@@ -279,11 +290,16 @@ class ProductServiceImpl implements ProductService
     public function getProductByCategory($category)
     {
         try {
-            $link = $category;
+            $slug = $category;
             $category = str_replace('-', ' ', $category);
-            $product = $this->productRepository->getByCategory($category)->first();
-            $product->link = url()->previous() . "/api/categories/{$link}/products";
-            return $product;
+            $products = $this->productRepository->getByCategory($category)->get();
+
+            $products = $products->map(function ($product) use ($slug) {
+                $product->link = url()->previous() . "/api/categories/{$slug}/products";
+                return $product;
+            });
+
+            return $products;
         } catch (\Throwable $th) {
             throw new ApiException($th->getMessage());
         }
