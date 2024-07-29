@@ -30,9 +30,9 @@ jobs:
             # Update remote to use SSH
             if [ ! -d ".git" ]; then
               git init
-              git remote add origin git@github.com:farhanmuallif/kasir-api.git
+              git remote add origin git@github.com:farhanmualif/kasir-api.git
             else
-              git remote set-url origin git@github.com:farhanmuallif/kasir-api.git
+              git remote set-url origin git@github.com:farhanmualif/kasir-api.git
             fi
 
             git config --global --add safe.directory /var/www/kasir-api
