@@ -41,7 +41,7 @@ jobs:
             echo "Pulling latest changes from Git"
             git pull origin dev || exit 1
 
-            echo "Install Composer"
+            echo "Installing Composer"
             composer install
 
             echo "DB miggration"
