@@ -26,16 +26,37 @@ jobs:
             sudo chown -R ubuntu:ubuntu /var/www/kasir-api
             sudo chmod -R 755 /var/www/kasir-api
             cd /var/www/kasir-api
-            sudo git init
-            git remote add origin https://github.com/farhanmualif/kasir-api.git
+
+            # Update remote to use SSH
+            if [ ! -d ".git" ]; then
+              git init
+              git remote add origin git@github.com:farhanmuallif/kasir-api.git
+            else
+              git remote set-url origin git@github.com:farhanmuallif/kasir-api.git
+            fi
+
             git config --global --add safe.directory /var/www/kasir-api
             git config pull.rebase false
-            git pull origin dev
+
+            echo "Pulling latest changes from Git"
+            git pull origin dev || exit 1
+
+            echo "Install Composer"
             composer install
-            php artisan migrate
-            php artisan db:seed
-            php artisan config:cache
-            php artisan route:cache
+
+            echo "DB miggration"
+            php artisan migrate || exit 1
+
+            echo "DB seeder"
+            php artisan db:seed || exit 1
+
+            echo "Caching configuration"
+            php artisan config:cache || exit 1
+
+            echo "Caching routes"
+            php artisan route:cache || exit 1
+
+            echo "Setting permissions"
             sudo chown -R www-data:www-data storage
             sudo chmod -R 775 storage
             sudo chown -R www-data:www-data storage/logs
