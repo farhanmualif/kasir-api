@@ -26,7 +26,8 @@ jobs:
             sudo chown -R ubuntu:ubuntu /var/www/kasir-api
             sudo chmod -R 755 /var/www/kasir-api
             cd /var/www/kasir-api
-            sudo git init
+            sudo git
+            git remote add origin https://github.com/farhanmualif/kasir-api.git
             git config --global --add safe.directory /var/www/kasir-api
             git config pull.rebase false
             git pull origin dev
