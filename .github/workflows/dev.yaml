@@ -27,7 +27,7 @@ jobs:
             git config pull.rebase false
             git pull origin dev
             composer install
-            php artisan migrate 
+            php artisan migrate
             php artisan db:seed
             php artisan config:cache
             php artisan route:cache
