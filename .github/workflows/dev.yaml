@@ -23,6 +23,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i "${{ secrets.EC2_SSH_KEY_DEV }}" ubuntu@${{ secrets.HOST_DNS_DEV }} << 'EOF'
             cd /var/www/kasir-api
+            git init
             git config --global --add safe.directory /var/www/kasir-api
             git config pull.rebase false
             git pull origin dev
