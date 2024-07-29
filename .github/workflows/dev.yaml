@@ -22,8 +22,9 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i "${{ secrets.EC2_SSH_KEY_DEV }}" ubuntu@${{ secrets.HOST_DNS_DEV }} << 'EOF'
+            echo "Changing directory to /var/www/kasir-api"
             cd /var/www/kasir-api
-            git init
+            sudo git init
             git config --global --add safe.directory /var/www/kasir-api
             git config pull.rebase false
             git pull origin dev
