@@ -39,7 +39,9 @@ jobs:
             git config pull.rebase false
 
             echo "Pulling latest changes from Git"
+            git stash
             git pull origin dev || exit 1
+            git stash pop
 
             echo "Installing Composer"
             composer install
