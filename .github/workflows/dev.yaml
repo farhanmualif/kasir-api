@@ -22,6 +22,7 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i "${{ secrets.EC2_SSH_KEY_DEV }}" ubuntu@${{ secrets.HOST_DNS_DEV }} << 'EOF'
+            echo "Successfully Connected With ssh"
             echo "Changing directory to /var/www/kasir-api"
             sudo chown -R ubuntu:ubuntu /var/www/kasir-api
             sudo chmod -R 755 /var/www/kasir-api
