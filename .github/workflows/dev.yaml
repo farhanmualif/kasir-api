@@ -56,7 +56,7 @@ jobs:
             echo "Caching routes"
             php artisan route:cache || exit 1
 
-            echo "Setting permissions"
+            echo "Setting permissions to storage"
             sudo chown -R www-data:www-data storage
             sudo chmod -R 775 storage
             sudo chown -R www-data:www-data storage/logs
