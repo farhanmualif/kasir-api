@@ -90,8 +90,17 @@ class ProductRepositoryImpl implements ProductRepository
      */
     public function getByBarcode(string $barcode)
     {
+        $storeId =  $this->auth->user()->stores()->first()->id;
 
-        return $this->product->where("barcode", $barcode)->first();
+        return $this->product
+            ->select('products.*')
+            ->join('product_store', 'product_store.product_id', '=', 'products.id')
+            ->join('stores', 'stores.id', '=', 'product_store.store_id')
+            ->join('categories', 'categories.store_id', '=', 'stores.id')
+            ->where('products.barcode', $barcode)
+            ->where('stores.id', $storeId)
+            ->with('category')
+            ->first();
     }
 
     /**

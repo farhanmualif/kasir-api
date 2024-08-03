@@ -182,9 +182,7 @@ class ProductServiceImpl implements ProductService
         }
         $product = $this->productRepository->getByUuid($uuid);
         $product->link = url()->previous() . "/api/products/" . $product->uuid;
-        // foreach ($products as $product) {
-        //     $product->link = url()->previous() . "/api/products/" . $product->uuid;
-        // }
+
         return $product;
     }
 
@@ -251,9 +249,19 @@ class ProductServiceImpl implements ProductService
     /**
      * @inheritDoc
      */
-    public function getProductByBarcode($uuid)
+    public function getProductByBarcode($barcode)
     {
-        return $this->productRepository->getByBarcode($uuid);
+        try {
+            $product = $this->productRepository->getByBarcode($barcode);
+
+            $product->link = url()->previous() . "/api/products/{$barcode}/barcode";
+
+
+            // dd($products);
+            return $product;
+        } catch (\Throwable $th) {
+            throw new ApiException($th->getMessage());
+        }
     }
     /**
      * @inheritDoc

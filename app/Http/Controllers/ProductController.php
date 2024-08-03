@@ -46,6 +46,13 @@ class ProductController extends Controller
         $product = $this->productServices->getProductByUuid($id);
         return responseJson("produk ditemukan", new ProductCollection($product));
     }
+
+    public function showByBarcode(string $barcode)
+    {
+        $product = $this->productServices->getProductByBarcode($barcode);
+        return responseJson("produk ditemukan", new ProductCollection($product));
+    }
+
     public function showImage(string $uuid)
     {
         // Dapatkan path gambar dari fileService

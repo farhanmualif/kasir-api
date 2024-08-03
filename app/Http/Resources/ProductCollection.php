@@ -26,6 +26,7 @@ class ProductCollection extends JsonResource
             "selling_price" => $this->selling_price,
             "purchase_price" => $this->purchase_price,
             "image" => $this->image,
+            "category" => $this->category ?? null,
             "created_at" => $this->created_at,
             "updated_at" => $this->updated_at,
         ];
