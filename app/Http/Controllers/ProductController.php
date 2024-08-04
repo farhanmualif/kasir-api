@@ -55,11 +55,11 @@ class ProductController extends Controller
 
     public function showImage(string $uuid)
     {
-        // Dapatkan path gambar dari fileService
+        // get path image file from fileService
         $productImagePath = $this->fileService->getProductImage($uuid);
 
 
-        // Dapatkan MIME type dari file
+        // get MIME type from file
         $mimeType = mime_content_type($productImagePath);
 
         return response()->file($productImagePath, [
@@ -69,7 +69,6 @@ class ProductController extends Controller
 
     public function showByCategory(string $categoryName)
     {
-        // dd($this->productServices->getProductByCategory($categoryName));
         return responseJson("produk ditemukan", ProductCollection::collection($this->productServices->getProductByCategory($categoryName)));
     }
 

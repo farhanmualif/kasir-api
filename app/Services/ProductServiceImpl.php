@@ -253,6 +253,8 @@ class ProductServiceImpl implements ProductService
     {
         try {
             $product = $this->productRepository->getByBarcode($barcode);
+            $product->purchase_price = floatval($product->purchase_price);
+            $product->selling_price = floatval($product->selling_price);
 
             $product->link = url()->previous() . "/api/products/{$barcode}/barcode";
 
@@ -283,7 +285,7 @@ class ProductServiceImpl implements ProductService
             $currentProduct = $this->productRepository->getByUuid($uuid);
             $currentProduct['image'] == 'product-default.png' ?: $this->fileService->deleteProductImage($payload['image']);
             $filename =  time() . '.' . $request->image->extension();
-            $this->fileService->uploadProductImage($request, $filename);
+            $this->fileService->uploadProductImage($payload, $filename);
             $this->productRepository->updateByUuid($uuid, [
                 'image' => $filename
             ]);
