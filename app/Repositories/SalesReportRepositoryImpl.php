@@ -3,11 +3,7 @@
 
 namespace App\Repositories;
 
-use App\Models\Store;
-use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class SalesReportRepositoryImpl implements SalesReportRepository
@@ -24,7 +20,7 @@ class SalesReportRepositoryImpl implements SalesReportRepository
     public function daily(string $date)
     {
         $storeId = $this->auth->user()->stores()->first()->id;
-        // dd($date);
+
         return DB::table('transactions as t')
             ->join('detail_transactions as dt', 't.id', '=', 'dt.id_transaction')
             ->join('products', 'dt.id_product', '=', 'products.id')
@@ -85,7 +81,7 @@ class SalesReportRepositoryImpl implements SalesReportRepository
                 DB::raw('SUM(detail_transactions.quantity * (products.selling_price - products.purchase_price)) AS profit')
             )
             ->groupBy(DB::raw('DAY(transactions.created_at)'))
-            ->orderBy(DB::raw('DAY(transactions.created_at)'));
+            ->orderBy(DB::raw('DAY(transactions.created_at)'), 'asc');
     }
 
     /**
@@ -109,6 +105,7 @@ class SalesReportRepositoryImpl implements SalesReportRepository
                 DB::raw('SUM(detail_transactions.quantity * products.selling_price) AS income'),
                 DB::raw('SUM(detail_transactions.quantity * (products.selling_price - products.purchase_price)) AS profit')
             )
-            ->groupBy('month_number', 'month', 'year');
+            ->groupBy('month_number', 'month', 'year')
+            ->orderBy(DB::raw('MONTH(transactions.created_at)'), 'asc');
     }
 }

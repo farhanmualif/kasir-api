@@ -32,7 +32,8 @@ class PurchaseReportRepositoryImpl implements PurchaseReportRepository
                 DB::raw('SUM(purchasing.total_payment) as total_expenditure')
             )
             ->where('stores.id', Auth::user()->stores->first()->id)
-            ->groupBy('month_number', 'day', 'month', 'year', 'purchasing.id');
+            ->groupBy('month_number', 'day', 'month', 'year', 'purchasing.id')
+            ->orderBy('purchasing.created_at', 'desc');
     }
 
     /**
@@ -70,7 +71,7 @@ class PurchaseReportRepositoryImpl implements PurchaseReportRepository
                 DB::raw('SUM(purchasing.quantity * products.selling_price) AS total_revenue')
             )
             ->groupBy(DB::raw('DATE(purchasing.created_at)'), 'month', 'month_name')
-            ->orderBy('date')
+            ->orderBy('date', 'desc')
             ->get();
 
         return [
@@ -103,7 +104,7 @@ class PurchaseReportRepositoryImpl implements PurchaseReportRepository
             ->join('product_store', 'product_store.product_id', '=', 'products.id')
             ->join('stores', 'stores.id', '=', 'product_store.store_id')
             ->where('stores.id', $storeId)
-            ->whereYear('purchasing.created_at', '=', $year) // Ganti '2024' dengan tahun yang diinginkan
+            ->whereYear('purchasing.created_at', '=', $year)
             ->select(
                 DB::raw('MONTH(purchasing.created_at) AS month'),
                 DB::raw('YEAR(purchasing.created_at) AS year'),
@@ -111,6 +112,7 @@ class PurchaseReportRepositoryImpl implements PurchaseReportRepository
                 DB::raw('SUM(total_payment) AS total_expendeture')
             )
             ->groupBy(DB::raw('MONTH(purchasing.created_at)'), 'year')
+            ->orderBy(DB::raw('MONTH(purchasing.created_at)'), 'asc')
             ->get();
 
         return [

@@ -64,8 +64,7 @@ class CategoryRepositoryImpl implements CategoryRepository
                 ->leftJoin('product_category', 'product_category.category_id', 'categories.id')
                 ->leftJoin('products', 'product_category.product_id', 'products.id')
                 ->where('categories.store_id', '=', $storeId)
-                ->groupBy('categories.id', 'categories.uuid', 'categories.name', 'categories.created_at', 'categories.updated_at')
-                ->get();
+                ->groupBy('categories.id', 'categories.uuid', 'categories.name', 'categories.created_at', 'categories.updated_at')->orderBy('categories.created_at', 'desc')->get();
             // dd($categories);
         } catch (\Throwable $th) {
             throw new ApiException($th->getMessage());
@@ -133,7 +132,7 @@ class CategoryRepositoryImpl implements CategoryRepository
         try {
             return $this->category->whereHas('store', function ($query) use ($storeId) {
                 $query->where('stores.id', $storeId);
-            })->with('store')->get();
+            })->with('store')->orderBy('categories.created_at', 'desc')->get();
         } catch (\Throwable $th) {
             throw new ApiException($th->getMessage());
         }

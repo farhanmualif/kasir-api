@@ -163,7 +163,7 @@ class ProductRepositoryImpl implements ProductRepository
             ->join('product_store', 'product_store.product_id', '=', 'products.id')
             ->join('stores', 'product_store.store_id', '=', 'stores.id')
             ->where('stores.id', '=', Auth::user()->stores->first()->id)
-            ->select('products.*');
+            ->select('products.*')->orderBy('products.created_at', 'desc');
 
         return $products;
     }
