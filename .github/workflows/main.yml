@@ -1,4 +1,4 @@
-name: 🚀 Deploy Changes to cPanel
+name: 🚀 Try To Deploy Changes to cPanel
 on:
   push:
     branches:
