@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Exceptions\ApiException;
+use App\Models\Invoices;
 use App\Models\Product;
+use App\Models\Transaction;
 use App\Services\FileService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -66,6 +68,38 @@ class FileServiceImpl implements FileService
                 throw new ApiException("Produk tidak ditemukan");
             }
             $path = storage_path("app/public/images/{$productImage->image}");
+
+            if (!file_exists($path)) {
+                abort(404);
+            }
+
+            return $path;
+        } catch (\Throwable $th) {
+            throw new ApiException($th->getMessage());
+        }
+    }
+
+    public  function getTrancsactionIvoice(string $noTransaction)
+    {
+        try {
+            $transaction = Transaction::where('no_transaction', $noTransaction)->first();
+
+
+            if (!$transaction->exists()) {
+                throw new ApiException('transaction tidak ditemukan');
+            }
+
+            $invoice = $transaction->invoice()->first();
+            if ($invoice == null) {
+                throw new ApiException('invoice tidak ditemukan');
+            }
+
+
+            if ($invoice == null) {
+                throw new ApiException("transaction tidak ditemukan");
+            }
+
+            $path = storage_path("app/public/invoices/{$invoice->filename}");
 
             if (!file_exists($path)) {
                 abort(404);

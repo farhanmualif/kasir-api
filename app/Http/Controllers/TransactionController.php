@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TransactionStoreRequest;
+use App\Services\FileService;
 use App\Services\TransactionService;
 use Illuminate\Http\Request;
 
@@ -11,7 +12,7 @@ class TransactionController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function __construct(public  TransactionService $transactionService)
+    public function __construct(public  TransactionService $transactionService, public FileService $fileService)
     {
     }
     public function index()
@@ -30,6 +31,18 @@ class TransactionController extends Controller
     public function show(string $noTransaction)
     {
         return responseJson("berhasil mendapatkan data", $this->transactionService->getByNoTransaction($noTransaction));
+    }
+    public function showInvoice(string $noTransaction)
+    {
+
+        $fileInvoice = $this->fileService->getTrancsactionIvoice($noTransaction);
+
+        // get MIME type from file
+        $mimeType = mime_content_type($fileInvoice);
+
+        return response()->file($fileInvoice, [
+            "Content-Type" => $mimeType,
+        ]);
     }
 
     /**

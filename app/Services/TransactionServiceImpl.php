@@ -5,6 +5,7 @@ namespace App\Services;
 
 use App\Exceptions\ApiException;
 use App\Http\Requests\TransactionStoreRequest;
+use App\Models\Invoices;
 use App\Repositories\DetailTransactionRepository;
 use App\Repositories\ProductRepository;
 use App\Repositories\TransactionRepository;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 class TransactionServiceImpl implements TransactionService
 {
 
-    public function __construct(public TransactionRepository $transactionRepository, public DetailTransactionRepository $detailTransaction, public ProductRepository $productRepository)
+    public function __construct(public TransactionRepository $transactionRepository, public DetailTransactionRepository $detailTransaction, public ProductRepository $productRepository, public Invoices $invoices)
     {
     }
 
@@ -88,7 +89,13 @@ class TransactionServiceImpl implements TransactionService
                 $currenProduct->save();
             }
 
-            generateInvoice($insertTransaction->no_transaction);
+
+            $pdfFilename = generateInvoice($insertTransaction->no_transaction);
+
+            $this->invoices->create([
+                'transaction_id' => $insertTransaction->id,
+                'filename' => $pdfFilename
+            ]);
 
             DB::commit();
             return $insertTransaction;

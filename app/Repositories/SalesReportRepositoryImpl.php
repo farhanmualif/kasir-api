@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 
 class SalesReportRepositoryImpl implements SalesReportRepository
 {
-
     public function __construct(
         public AuthManager $auth,
     ) {

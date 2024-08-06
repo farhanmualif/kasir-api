@@ -40,11 +40,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('categories/{categoryName}/products', [ProductController::class, 'showByCategory']);
     Route::get('products/images/{uuid}', [ProductController::class, 'showImage']);
     Route::post('categories/{productUuid}/products', [ProductController::class, 'addCategoriesToProduct']);
-    Route::delete('categories/{productUuid}/products', [ProductController::class, 'removeCategoriesFromProduct']);
     Route::put('categories/{uuid}/product', [CategoryController::class, 'updateByProductUuid']);
-
-
-    Route::post('logout', [AuthController::class, 'logout']);
+    Route::delete('categories/{productUuid}/products', [ProductController::class, 'removeCategoriesFromProduct']);
 
     Route::get('sales/daily/{date}', [RaportController::class, 'getDailySales']);
     Route::get('sales/monthly/{date}', [RaportController::class, 'getMonthlySales']);
@@ -53,4 +50,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('purchases/daily/{date}', [RaportController::class, 'getDailyPurchases']);
     Route::get('purchases/monthly/{date}', [RaportController::class, 'getMonthlyPurchases']);
     Route::get('purchases/yearly/{date}', [RaportController::class, 'getYearlyPurchases']);
+    Route::get('transaction/{noTransaction}/invoice', [TransactionController::class, 'showInvoice']);
+
+    Route::post('logout', [AuthController::class, 'logout']);
 });
