@@ -1,39 +1,19 @@
-name: Push-to-EC2
-
-# Trigger deployment only on push to master branch
+name: 🚀 Deploy Changes to cPanel
 on:
   push:
     branches:
       - master
-
 jobs:
-  deploy:
-    name: Deploy to EC2 on master branch push
+  FTP-Deploy-Action:
+    name: FTP-Deploy-Action
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout the files
-        uses: actions/checkout@v2
-
-      - name: Deploy to EC2
-        uses: easingthemes/ssh-deploy@main
-
+      - uses: actions/checkout@v2.1.0
         with:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.HOST_DNS }}
-          REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: ${{ secrets.TARGET_DIR }}
-
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.5.3
+          fetch-depth: 2
+      - name: FTP-Deploy-Action
+        uses: SamKirkland/FTP-Deploy-Action@4.3.3
         with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
-
-      - name: Set Permission
-        run: |
-          ssh -o StrictHostKeyChecking=no -i "${{ secrets.EC2_SSH_KEY }}" ubuntu@ec2-54-79-105-137.ap-southeast-2.compute.amazonaws.com  "
-            sudo chown -R www-data:www-data /var/www/kasir-api/storage
-            sudo chmod -R 775 /var/www/kasir-api/storage
-            sudo chown -R www-data:www-data /var/www/kasir-api/storage/logs
-            sudo chmod -R 775 /var/www/kasir-api/storage/logs
-            sudo systemctl restart nginx "
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
