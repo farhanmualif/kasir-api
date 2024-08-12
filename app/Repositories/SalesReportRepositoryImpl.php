@@ -76,7 +76,7 @@ class SalesReportRepositoryImpl implements SalesReportRepository
             ->select(
                 DB::raw('DAY(transactions.created_at) as day'),
                 DB::raw('COUNT(DISTINCT detail_transactions.id_transaction) AS transaction_amount'),
-                DB::raw('SUM(detail_transactions.quantity * products.selling_price) AS income'),
+                DB::raw('CAST(SUM(detail_transactions.quantity * products.selling_price) AS SIGNED) AS income'),
                 DB::raw('SUM(detail_transactions.quantity * (products.selling_price - products.purchase_price)) AS profit')
             )
             ->groupBy(DB::raw('DAY(transactions.created_at)'))
@@ -90,10 +90,10 @@ class SalesReportRepositoryImpl implements SalesReportRepository
     {
         $storeId = $this->auth->user()->stores()->first()->id;
         return DB::table('transactions')
-            ->join('detail_transactions', 'transactions.id', '=', 'detail_transactions.id_transaction')
-            ->join('products', 'products.id', '=', 'detail_transactions.id_product')
-            ->join('product_store', 'products.id', '=', 'product_store.product_id')
-            ->join('stores', 'stores.id', '=', 'product_store.store_id')
+            ->join('detail_transactions', 'detail_transactions.id_transaction', '=', 'transactions.id')
+            ->join('products', 'detail_transactions.id_product', '=', 'products.id')
+            ->join('product_store', 'product_store.product_id', '=', 'products.id')
+            ->join('stores', 'product_store.store_id', '=', 'stores.id')
             ->whereYear('transactions.created_at', $year)
             ->where('stores.id', $storeId)
             ->select(

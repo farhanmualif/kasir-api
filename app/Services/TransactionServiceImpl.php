@@ -10,13 +10,13 @@ use App\Repositories\DetailTransactionRepository;
 use App\Repositories\ProductRepository;
 use App\Repositories\TransactionRepository;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
+use Illuminate\Support\Facades\Storage;
 
 class TransactionServiceImpl implements TransactionService
 {
 
-    public function __construct(public TransactionRepository $transactionRepository, public DetailTransactionRepository $detailTransaction, public ProductRepository $productRepository, public Invoices $invoices)
-    {
-    }
+    public function __construct(public TransactionRepository $transactionRepository, public DetailTransactionRepository $detailTransaction, public ProductRepository $productRepository, public Invoices $invoices) {}
 
     /**
      * @inheritDoc
@@ -90,7 +90,7 @@ class TransactionServiceImpl implements TransactionService
             }
 
 
-            $pdfFilename = generateInvoice($insertTransaction->no_transaction);
+            $pdfFilename = $this->generateInvoice($insertTransaction->no_transaction);
 
             $this->invoices->create([
                 'transaction_id' => $insertTransaction->id,
@@ -131,7 +131,92 @@ class TransactionServiceImpl implements TransactionService
     /**
      * @inheritDoc
      */
-    public function update(TransactionStoreRequest $data, array $transaction)
+    public function update(TransactionStoreRequest $data, array $transaction) {}
+    /**
+     * @inheritDoc
+     */
+    public function generateInvoice(string $noTransaction)
     {
+        try {
+
+            $transaction = $this->transactionRepository->getSalesInvoice($noTransaction);
+
+            $totalPrice = 0;
+            foreach ($transaction as $item) {
+                $totalPrice += $item->total_price;
+            }
+
+            $detailTransaction = [
+                'no_transaction' => $transaction->first()->no_transaction,
+                'time' => $transaction->first()->time,
+                'date' => $transaction->first()->date,
+                'cash' => intval($transaction->first()->cash),
+                'change' => $transaction->first()->cash - $totalPrice,
+                'total_price' => intval($totalPrice),
+                'total_payment' => intval($transaction->first()->total_payment),
+                'items' => []
+            ];
+
+            foreach ($transaction as $items) {
+                $detailTransaction['items'][] = [
+                    'name' => $items->name,
+                    'quantity' => $items->quantity,
+                    'item_price' => $items->item_price,
+                    'total_price' => $items->total_price
+                ];
+            }
+
+            // $pdf = App::make('dompdf.wrapper');
+            // $pdf->loadView('invoice', compact('detail_transaction'));
+
+
+            $pdf = FacadePdf::loadView('invoice', compact('detailTransaction'));
+            $pdf->setPaper('A4', 'portrait');
+
+            // Set lebar kertas menjadi 8cm
+            // Simpan file PDF ke storage
+            $pdf_filename = "invoice_$noTransaction.pdf";
+
+            Storage::put("public/invoices/$pdf_filename", $pdf->output());
+
+            // Return the PDF file URL
+            return $pdf_filename;
+        } catch (\Throwable $th) {
+            throw new ApiException("tidak dapat membuat struk {$th->getMessage()}");
+        }
+    }
+    /**
+     * @inheritDoc
+     */
+    /**
+     * @inheritDoc
+     */
+    public function getInvoice(string $noTransaction)
+    {
+        try {
+            $invoice = $this->transactionRepository->getSalesInvoice($noTransaction);
+            $invoice->map(function ($item) {
+                $item->total_payment = (int) $item->total_payment;
+                $item->cash = (int) $item->cash;
+            });
+
+            return [
+                'no_transaction' => $invoice->first()->no_transaction,
+                'total_payment' => $invoice->first()->total_payment,
+                'cash' => $invoice->first()->cash,
+                'time' => $invoice->first()->time,
+                'date' => $invoice->first()->date,
+                'items' =>  $invoice->map(function ($item) {
+                    return  [
+                        "name" => $item->name,
+                        "quantity" => $item->quantity,
+                        "item_price" => $item->item_price,
+                        "total_price" => $item->total_price,
+                    ];
+                })
+            ];
+        } catch (\Throwable $th) {
+            throw new ApiException("Terjadi kesalahan {$th->getMessage()}");
+        }
     }
 }

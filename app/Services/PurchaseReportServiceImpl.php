@@ -89,6 +89,7 @@ class PurchaseReportServiceImpl implements PurchaseReportService
             $year = Carbon::createFromFormat("Y", $date);
 
             $purchaseYearly  = $this->purchaseReportRepository->yearly($year);
+            $purchaseYearly["link"] = url("/api/sales/monthly/{$date}-1-1");
 
             if ($purchaseYearly['monthly_purchases']->count() === 0) {
                 throw new ApiException('data pembelian tidak ditemukan', 404);

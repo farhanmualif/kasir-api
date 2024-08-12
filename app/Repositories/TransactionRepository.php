@@ -13,4 +13,5 @@ interface TransactionRepository
     public function deleteById(int $id);
     public function deleteByUuid(string $uuid);
     public function deleteByNoTransaction(string $noTransaction);
+    public function getSalesInvoice(string $noTransaction);
 }

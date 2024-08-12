@@ -52,8 +52,9 @@ class PurchaseReportRepositoryImpl implements PurchaseReportRepository
             ->whereYear('purchasing.created_at', '=', $year)
             ->where('categories.store_id', $storeId)
             ->select(
-                DB::raw('COUNT(DISTINCT purchasing.id) AS total_transaction'),
-                DB::raw('SUM(purchasing.quantity * products.selling_price) AS total_revenue')
+                DB::raw('COUNT(purchasing.id) AS total_transaction'),
+                DB::raw('SUM(purchasing.quantity * products.selling_price) AS total_revenue'),
+                DB::raw('COUNT(purchasing.quantity * products.selling_price) AS total_expenditure')
             )->first();
 
         $dailyData = DB::table('purchasing')
@@ -64,19 +65,19 @@ class PurchaseReportRepositoryImpl implements PurchaseReportRepository
             ->whereYear('purchasing.created_at', '=', $year)
             ->where('stores.id', $storeId)
             ->select(
-                DB::raw('COUNT(DISTINCT purchasing.id) AS total_transaction'),
+                DB::raw('COUNT(purchasing.id) AS total_transaction'),
                 DB::raw('DATE(purchasing.created_at) AS date'),
                 DB::raw('MONTH(purchasing.created_at) AS month'),
                 DB::raw('MONTHNAME(purchasing.created_at) AS month_name'),
-                DB::raw('SUM(purchasing.quantity * products.selling_price) AS total_revenue')
+                DB::raw('CAST(SUM(purchasing.total_payment) AS SIGNED) AS expenditure')
             )
             ->groupBy(DB::raw('DATE(purchasing.created_at)'), 'month', 'month_name')
             ->orderBy('date', 'desc')
             ->get();
 
         return [
-            'total_transaction' => $monthData->total_transaction,
-            'total_revenue' => intval($monthData->total_revenue),
+            'total_purchases' => array_sum(array_column($dailyData->toArray(), 'total_transaction')),
+            'total_expenditure' => array_sum(array_column($dailyData->toArray(), 'expenditure')),
             'daily_data' => $dailyData
         ];
     }
@@ -107,11 +108,13 @@ class PurchaseReportRepositoryImpl implements PurchaseReportRepository
             ->whereYear('purchasing.created_at', '=', $year)
             ->select(
                 DB::raw('MONTH(purchasing.created_at) AS month'),
+                DB::raw('MONTHNAME(purchasing.created_at) AS month_name'),
                 DB::raw('YEAR(purchasing.created_at) AS year'),
                 DB::raw('COUNT(*) AS total_transaction'),
                 DB::raw('SUM(total_payment) AS total_expendeture')
             )
             ->groupBy(DB::raw('MONTH(purchasing.created_at)'), 'year')
+            ->groupBy('month_name')
             ->orderBy(DB::raw('MONTH(purchasing.created_at)'), 'asc')
             ->get();
 

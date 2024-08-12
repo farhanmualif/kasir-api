@@ -22,7 +22,7 @@ class SalesReportServiceImpl implements SalesReportService
         try {
 
             $dailySales = $this->salesReportRepository->daily($date)->get();
-    
+
 
             if ($dailySales->count() === 0) {
                 throw new ApiException("data belum tersedia", 404);
@@ -93,24 +93,24 @@ class SalesReportServiceImpl implements SalesReportService
             $transactions = $data->map(function ($item) use ($year, $month) {
                 return [
                     "link" => url("/api/sales/daily/{$year}-{$month}-{$item->day}"),
-                    "date" => $item->day,
-                    "income" => $item->income,
+                    "date" => (string) $item->day,
+                    "income" => (int)$item->income,
                     "transaction_amount" => $item->transaction_amount,
-                    "profit" => $item->profit
+                    "profit" => (int)$item->profit
                 ];
             });
 
             $result = [
-                [
-                    "link" => url("/api/sales/monthly/{$year}-{$month}"),
-                    "total_transactions" =>  $data->sum('transaction_amount'),
-                    "total_income" => $data->sum('income'),
-                    "total_profit" => $data->sum('profit'),
-                    "month" => date('F', mktime(0, 0, 0, $month, 1)),
-                    "month_number" => (int)$month,
-                    "year" => (int)$year,
-                    "transactions" => $transactions
-                ]
+
+                "link" => url("/api/sales/monthly/{$year}-{$month}"),
+                "total_transactions" =>  $data->sum('transaction_amount'),
+                "total_income" => $data->sum('income'),
+                "total_profit" => $data->sum('profit'),
+                "month" => date('F', mktime(0, 0, 0, $month, 1)),
+                "month_number" => (string)$month,
+                "year" => (string)$year,
+                "transactions" => $transactions
+
             ];
 
             return $result;

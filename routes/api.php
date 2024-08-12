@@ -51,6 +51,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('purchases/monthly/{date}', [RaportController::class, 'getMonthlyPurchases']);
     Route::get('purchases/yearly/{date}', [RaportController::class, 'getYearlyPurchases']);
     Route::get('transaction/{noTransaction}/invoice', [TransactionController::class, 'showInvoice']);
+    Route::get('invoices/{noTransaction}', [TransactionController::class, 'showSalesInvoice']);
 
     Route::post('logout', [AuthController::class, 'logout']);
 });

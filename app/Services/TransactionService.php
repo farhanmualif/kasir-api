@@ -10,4 +10,7 @@ interface TransactionService
     public function getAll();
     public function getByNoTransaction(string $noTransaction);
     public function update(TransactionStoreRequest $data, array $transaction);
+
+    public function getInvoice(string $noTransaction);
+    public function generateInvoice(string $noTransaction);
 }

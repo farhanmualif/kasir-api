@@ -3,16 +3,15 @@
 
 namespace App\Repositories;
 
+use App\Exceptions\ApiException;
 use App\Models\Transaction;
 use App\Repositories\TransactionRepository;
-
+use Illuminate\Support\Facades\DB;
 
 class TransactionRepositoryImpl implements TransactionRepository
 {
 
-    public function __construct(public Transaction $transaction)
-    {
-    }
+    public function __construct(public Transaction $transaction) {}
 
     /**
      * @inheritDoc
@@ -72,5 +71,26 @@ class TransactionRepositoryImpl implements TransactionRepository
     public function findByUuid(string $uuid)
     {
         return $this->transaction->where('uuid', $uuid);
+    }
+
+    public function getSalesInvoice(string $noTransaction)
+    {
+
+        return DB::table('transactions')
+            ->join('detail_transactions', 'transactions.id', '=', 'detail_transactions.id_transaction')
+            ->join('products', 'detail_transactions.id_product', '=', 'products.id')
+            ->select(
+                'transactions.no_transaction',
+                'products.name',
+                'detail_transactions.quantity',
+                'detail_transactions.item_price',
+                'detail_transactions.total_price',
+                'transactions.total_payment',
+                'transactions.cash',
+                DB::raw('TIME(transactions.created_at) as time'),
+                DB::raw('DATE(transactions.created_at) as date'),
+            )
+            ->where('transactions.no_transaction', '=', $noTransaction)
+            ->get();
     }
 }

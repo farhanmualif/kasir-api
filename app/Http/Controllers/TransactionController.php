@@ -12,9 +12,7 @@ class TransactionController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function __construct(public  TransactionService $transactionService, public FileService $fileService)
-    {
-    }
+    public function __construct(public  TransactionService $transactionService, public FileService $fileService) {}
     public function index()
     {
         return \responseJson("data transaksi ditemukan", $this->transactionService->getAll());
@@ -45,27 +43,8 @@ class TransactionController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function showSalesInvoice(string $noTransaction)
     {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return responseJson("Berhasil Mendaapatkan invoice", $this->transactionService->getInvoice($noTransaction));
     }
 }
