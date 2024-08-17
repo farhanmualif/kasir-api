@@ -14,9 +14,7 @@ use App\Services\ProductService;
 class ProductController extends Controller
 {
 
-    public function __construct(public ProductService $productServices, public FileService $fileService)
-    {
-    }
+    public function __construct(public ProductService $productServices, public FileService $fileService) {}
 
     /**
      * Display a listing of the resource.
@@ -102,5 +100,11 @@ class ProductController extends Controller
     {
         $this->productServices->deleteProductByUuid($id);
         return responseJson("berhasil menghapus data");
+    }
+
+    public function purchaseProductsExist(ProductStoreRequest $request)
+    {
+        $updated = $this->productServices->addExistsProducts($request);
+        return responseJson("berhasil menambah data produk", ProductCollection::collection($updated));
     }
 }

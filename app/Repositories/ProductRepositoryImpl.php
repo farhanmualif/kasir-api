@@ -11,9 +11,7 @@ use Illuminate\Support\Str;
 class ProductRepositoryImpl implements ProductRepository
 {
 
-    public function __construct(public Product $product, public Category $category, public AuthManager $auth)
-    {
-    }
+    public function __construct(public Product $product, public Category $category, public AuthManager $auth) {}
 
     /**
      * @inheritDoc
@@ -53,7 +51,13 @@ class ProductRepositoryImpl implements ProductRepository
      */
     public function findByBarcode(string $barcode)
     {
-        return $this->product->where('barcode', $barcode)->exists();
+
+        return $this->product
+            ->join('product_store', 'products.id', '=', 'product_store.product_id')
+            ->join('stores', 'stores.id', '=', 'product_store.store_id')
+            ->where('product_store.store_id', $this->auth->user()->stores()->first()->id)
+            ->where('products.barcode', $barcode)
+            ->exists();;
     }
 
     /**
@@ -90,16 +94,12 @@ class ProductRepositoryImpl implements ProductRepository
      */
     public function getByBarcode(string $barcode)
     {
-        $storeId =  $this->auth->user()->stores()->first()->id;
-
         return $this->product
-            ->select('products.*')
-            ->join('product_store', 'product_store.product_id', '=', 'products.id')
+            ->select(['products.id as id', 'products.uuid as uuid', 'products.name as name', 'products.barcode', 'products.stock', 'products.selling_price', 'products.purchase_price', 'products.image',  'products.created_at', 'products.updated_at'])
+            ->join('product_store', 'products.id', '=', 'product_store.product_id')
             ->join('stores', 'stores.id', '=', 'product_store.store_id')
-            ->join('categories', 'categories.store_id', '=', 'stores.id')
+            ->where('product_store.store_id', $this->auth->user()->stores()->first()->id)
             ->where('products.barcode', $barcode)
-            ->where('stores.id', $storeId)
-            ->with('category')
             ->first();
     }
 
@@ -133,7 +133,19 @@ class ProductRepositoryImpl implements ProductRepository
      */
     public function updateByBarcode(string $barcode, array $data)
     {
-        return $this->product->where('barcode', $barcode)->update($data);
+        // Ambil store_id dari user yang sedang login
+        $storeId = $this->auth->user()->stores()->first()->id;
+
+        // Cari produk berdasarkan barcode dan store_id
+        $product = $this->product
+            ->whereHas('stores', function ($store) use ($storeId) {
+                $store->where('stores.id', $storeId);
+            })
+            ->where('barcode', $barcode)
+            ->first();
+
+        // Update data produk
+        return $product->update($data);
     }
 
     /**

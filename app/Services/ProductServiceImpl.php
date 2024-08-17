@@ -27,9 +27,7 @@ use Illuminate\Support\Facades\Log;
 class ProductServiceImpl implements ProductService
 {
 
-    public function __construct(public Logger $logging, public ProductRepository $productRepository, public FileService $fileService, public PurchasingRepository $purchasingRepository, public StoreRepository $storeRepository, public CategoryRepository $categoryRepository, public AuthManager $auth)
-    {
-    }
+    public function __construct(public Logger $logging, public ProductRepository $productRepository, public FileService $fileService, public PurchasingRepository $purchasingRepository, public StoreRepository $storeRepository, public CategoryRepository $categoryRepository, public AuthManager $auth) {}
 
     /**
      * @inheritDoc
@@ -47,7 +45,7 @@ class ProductServiceImpl implements ProductService
             }
 
             if (in_array($payload['barcode'], $findBarcodes)) {
-                throw new ApiException("barcode sudah digunakan, gunakan barcode yang lain");
+                throw new ApiException("Barcode sudah digunakan, gunakan barcode yang lain");
             }
 
             if ($payload['selling_price'] < $payload['purchase_price']) {
@@ -351,6 +349,61 @@ class ProductServiceImpl implements ProductService
         } catch (\Throwable $th) {
             DB::rollBack();
             throw new ApiException($th->getMessage());
+        }
+    }
+
+
+    /**
+     * @inheritDoc
+     */
+    public function addExistsProducts(ProductStoreRequest $request)
+    {
+        DB::beginTransaction();
+        try {
+
+            $updatedProducts = [];
+            $validated = $request->validated();
+
+
+            foreach ($validated["products"] as $item) {
+
+                if ($item['quantity_stok'] < 0) {
+                    throw new ApiException("Jumlah stok tidak boleh kurang dari 0.");
+                }
+
+                if (!$this->productRepository->findByBarcode($item['barcode'])) {
+                    throw new ApiException("Produk {$item['name']} Belum tersedia");
+                }
+
+                $findProduct = $this->productRepository->getByBarcode($item['barcode']);
+
+                $currentStock = $findProduct['stock'];
+                $newStock = $currentStock + $item['quantity_stok'];
+
+                $item['stock'] = $newStock;
+
+                unset($item['quantity_stok']);
+
+
+                $updated = $this->productRepository->updateByBarcode($item['barcode'], $item);
+
+
+                if (!$updated) {
+                    throw new ApiException("Gagal update data {$item['name']}");
+                }
+
+                $findProduct->stock = $item['stock'];
+                $updatedProducts[$findProduct->barcode] = $this->productRepository->getByBarcode($item['barcode']);
+                $updatedProducts[$findProduct->barcode]['link'] = url()->current();
+            }
+
+
+            DB::commit();
+            return $updatedProducts;
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating product: ' . $e->getMessage());
+            throw new ApiException($e->getMessage());
         }
     }
 }

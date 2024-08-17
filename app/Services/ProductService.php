@@ -12,6 +12,7 @@ interface ProductService
 {
     public function create(ProductStoreRequest $request);
     public function addCategoriesToProduct(CategoryUpdateRequest $request, string $productUuid);
+    public function addExistsProducts(ProductStoreRequest $request);
     public function deleteCategoriesInProduct(CategoryUpdateRequest $request, string $productUuid);
     public function getAll();
     public function getProductById($id);
