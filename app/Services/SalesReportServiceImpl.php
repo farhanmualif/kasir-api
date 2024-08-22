@@ -124,32 +124,35 @@ class SalesReportServiceImpl implements SalesReportService
     public function getYearlySales(string $date)
     {
         try {
+            $date = explode("-", $date);
+            $date = "$date[0]";
+            $date = Carbon::createFromFormat("Y", $date);
 
-            $year = Carbon::createFromFormat('Y-m-d', $date)->year;
+            // Fetch sales data for the given year
+            $salesData = $this->salesReportRepository->yearly($date->year)->get();
 
-
-            $salesData = $this->salesReportRepository->yearly($year)->get();
-
-
+            // Check if sales data is available
             if ($salesData->isEmpty()) {
                 throw new ApiException("Data belum tersedia", 404);
             }
 
+            // Calculate total transactions, income, and profit
+            $totalTransaction = $salesData->sum('total_transaction');
+            $totalIncome = $salesData->sum('income');
+            $totalProfit = $salesData->sum('profit');
 
-
-
-
+            // Prepare the response data
             $data = [
                 'link' => url()->current(),
-                'total_transactions' => $salesData->sum('total_transaction'),
-                'total_income' => $salesData->sum('income'),
-                'total_profit' => $salesData->sum('profit'),
-                'year' => $year,
+                'total_transactions' => $totalTransaction,
+                'total_income' => $totalIncome,
+                'total_profit' => $totalProfit,
+                'year' => $date->year,
                 'transactions' => $salesData->map(function ($sale) {
                     return [
                         'link' => url()->previous() . "/api/sales/monthly/{$sale->year}-{$sale->month_number}",
                         'date' => $sale->month,
-                        'total_transaction' => $sale->total_transaction,
+                        'total_transaction_permonth' => $sale->total_transaction,
                         'month_num' => $sale->month_number,
                         'income' => $sale->income,
                         'profit' => $sale->profit,
@@ -159,14 +162,7 @@ class SalesReportServiceImpl implements SalesReportService
 
             return $data;
         } catch (\Throwable $th) {
-            // Log the exception for debugging
-            Log::error("Error fetching yearly sales: " . $th->getMessage(), [
-                'exception' => $th,
-                'date' => $date,
-            ]);
-
-            // Rethrow the exception as an ApiException
-            throw new ApiException($th->getMessage(), $th->getCode() ?: 404);
+            throw new ApiException($th->getMessage(), 404);
         }
     }
 }
