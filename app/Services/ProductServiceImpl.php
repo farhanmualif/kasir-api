@@ -375,26 +375,36 @@ class ProductServiceImpl implements ProductService
                     throw new ApiException("Produk {$item['name']} Belum tersedia");
                 }
 
-                $findProduct = $this->productRepository->getByBarcode($item['barcode']);
+                $getCurrentProduct = $this->productRepository->getByBarcode($item['barcode']);
 
-                $currentStock = $findProduct['stock'];
+                $currentStock = $getCurrentProduct['stock'];
                 $newStock = $currentStock + $item['quantity_stok'];
 
                 $item['stock'] = $newStock;
 
-                unset($item['quantity_stok']);
-
-
                 $updated = $this->productRepository->updateByBarcode($item['barcode'], $item);
-
 
                 if (!$updated) {
                     throw new ApiException("Gagal update data {$item['name']}");
                 }
 
-                $findProduct->stock = $item['stock'];
-                $updatedProducts[$findProduct->barcode] = $this->productRepository->getByBarcode($item['barcode']);
-                $updatedProducts[$findProduct->barcode]['link'] = url()->current();
+                $createPurchasing = $this->purchasingRepository->create([
+                    'no_purchasing' => generateNoTransaction(),
+                    'product_id' => $getCurrentProduct->id,
+                    'quantity' => $item['quantity_stok'],
+                    'description' => $item['description'] ?? "",
+                    'total_payment' => $getCurrentProduct->purchase_price * $item['quantity_stok']
+                ]);
+
+                if (!$createPurchasing) {
+                    throw new ApiException("Gagal update data {$item['name']}");
+                }
+
+                unset($item['quantity_stok']);
+
+                $getCurrentProduct->stock = $item['stock'];
+                $updatedProducts[$getCurrentProduct->barcode] = $this->productRepository->getByBarcode($item['barcode']);
+                $updatedProducts[$getCurrentProduct->barcode]['link'] = url()->current();
             }
 
 

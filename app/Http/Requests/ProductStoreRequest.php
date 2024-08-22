@@ -33,9 +33,9 @@ class ProductStoreRequest extends FormRequest
             'category_id' => 'numeric|nullable',
 
             'products' => 'array',
-            'products.*.name' => 'required|max:100|string',
-            'products.*.uuid' => 'required|max:100|string',
-            'products.*.barcode' => 'max:100|string|nullable',
+            'products.*.name' => 'max:100|string',
+            'products.*.uuid' => 'max:100|string',
+            'products.*.barcode' => 'required|max:100|string|nullable',
             'products.*.quantity_stok' => 'required|max:100|numeric',
         ];
     }

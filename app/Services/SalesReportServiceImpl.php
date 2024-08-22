@@ -6,13 +6,12 @@ use App\Exceptions\ApiException;
 use App\Repositories\SalesReportRepository;
 use App\Services\SalesReportService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class SalesReportServiceImpl implements SalesReportService
 {
 
-    public function __construct(public SalesReportRepository $salesReportRepository)
-    {
-    }
+    public function __construct(public SalesReportRepository $salesReportRepository) {}
     /**
      * @inheritDoc
      */
@@ -125,37 +124,49 @@ class SalesReportServiceImpl implements SalesReportService
     public function getYearlySales(string $date)
     {
         try {
-            $date = explode("-", $date);
-            $date = "$date[0]";
-            $date = Carbon::createFromFormat("Y", $date);
 
-            $salesData = $this->salesReportRepository->yearly($date->year)->get();
-            if ($salesData->count() === 0) {
-                throw new ApiException("data belm tersedia", 404);
+            $year = Carbon::createFromFormat('Y-m-d', $date)->year;
+
+
+            $salesData = $this->salesReportRepository->yearly($year)->get();
+
+
+            if ($salesData->isEmpty()) {
+                throw new ApiException("Data belum tersedia", 404);
             }
+
+
+
+
 
             $data = [
-                'link' => \url()->current(),
-                'total_transactions' => $salesData->first()->total_transaction,
+                'link' => url()->current(),
+                'total_transactions' => $salesData->sum('total_transaction'),
                 'total_income' => $salesData->sum('income'),
                 'total_profit' => $salesData->sum('profit'),
-                'year' => $salesData->first()->year,
-                'transactions' => [],
+                'year' => $year,
+                'transactions' => $salesData->map(function ($sale) {
+                    return [
+                        'link' => url()->previous() . "/api/sales/monthly/{$sale->year}-{$sale->month_number}",
+                        'date' => $sale->month,
+                        'total_transaction' => $sale->total_transaction,
+                        'month_num' => $sale->month_number,
+                        'income' => $sale->income,
+                        'profit' => $sale->profit,
+                    ];
+                })->toArray(),
             ];
 
-            foreach ($salesData as $sale) {
-                $data['transactions'][] = [
-                    'link' => \url()->previous() . "/api/sales/monthly/{$sale->year}-{$sale->month_number}",
-                    'date' => $sale->month,
-                    'month_num' => $sale->month_number,
-                    'income' => $sale->income,
-                    'profit' => $sale->profit,
-                ];
-            }
-
-            return  $data;
+            return $data;
         } catch (\Throwable $th) {
-            throw new ApiException($th->getMessage(), 404);
+            // Log the exception for debugging
+            Log::error("Error fetching yearly sales: " . $th->getMessage(), [
+                'exception' => $th,
+                'date' => $date,
+            ]);
+
+            // Rethrow the exception as an ApiException
+            throw new ApiException($th->getMessage(), $th->getCode() ?: 404);
         }
     }
 }

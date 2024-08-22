@@ -8,9 +8,7 @@ use App\Models\Purchasing;
 class PurchasingRepositoryImpl implements PurchasingRepository
 {
 
-    public function __construct(private Purchasing $purchasing)
-    {
-    }
+    public function __construct(private Purchasing $purchasing) {}
 
     /**
      * @inheritDoc

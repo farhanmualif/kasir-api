@@ -10,8 +10,7 @@ class SalesReportRepositoryImpl implements SalesReportRepository
 {
     public function __construct(
         public AuthManager $auth,
-    ) {
-    }
+    ) {}
 
     /**
      * @inheritDoc
@@ -88,7 +87,9 @@ class SalesReportRepositoryImpl implements SalesReportRepository
      */
     public function yearly(string $year)
     {
+
         $storeId = $this->auth->user()->stores()->first()->id;
+
         return DB::table('transactions')
             ->join('detail_transactions', 'detail_transactions.id_transaction', '=', 'transactions.id')
             ->join('products', 'detail_transactions.id_product', '=', 'products.id')
@@ -100,7 +101,7 @@ class SalesReportRepositoryImpl implements SalesReportRepository
                 DB::raw('MONTHNAME(transactions.created_at) AS month'),
                 DB::raw('YEAR(transactions.created_at) AS year'),
                 DB::raw('MONTH(transactions.created_at) AS month_number'),
-                DB::raw('COUNT(*) as total_transaction'),
+                DB::raw('COUNT(transactions.id) as total_transaction'),
                 DB::raw('SUM(detail_transactions.quantity * products.selling_price) AS income'),
                 DB::raw('SUM(detail_transactions.quantity * (products.selling_price - products.purchase_price)) AS profit')
             )
