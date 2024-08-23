@@ -1,69 +1,21 @@
-name: Push-to-Dev
-
+name: Deploy Private GitHub repository to cPanel
 on:
   push:
     branches:
-      - dev
-
+      - master
 jobs:
-  deploy:
-    name: Deploy to EC2 on dev branch push
+  FTP-Deploy-Action:
+    name: 🎉 Deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout the filess
-        uses: actions/checkout@v2
-
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.5.3
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v3
         with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY_DEV }}
-
-      - name: Deploy to EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no -i "${{ secrets.EC2_SSH_KEY_DEV }}" ubuntu@${{ secrets.HOST_DNS_DEV }} << 'EOF'
-            echo "Successfully Connected With ssh"
-            echo "Changing directory to /var/www/kasir-api"
-            sudo chown -R ubuntu:ubuntu /var/www/kasir-api
-            sudo chmod -R 755 /var/www/kasir-api
-            cd /var/www/kasir-api
-
-            # Update remote to use SSH
-            if [ ! -d ".git" ]; then
-              git init
-              git remote add origin git@github.com:farhanmualif/kasir-api.git
-            else
-              git remote set-url origin git@github.com:farhanmualif/kasir-api.git
-            fi
-
-            git config --global --add safe.directory /var/www/kasir-api
-            git config pull.rebase false
-
-            echo "Pulling latest changes from Git"
-            git stash
-            git pull origin dev || exit 1
-            git stash pop
-
-            echo "Installing Composer"
-            sudo apt install composer
-            composer install
-
-            echo "DB miggration"
-            php artisan migrate || exit 1
-
-            echo "DB seeder"
-            php artisan db:seed || exit 1
-
-            echo "Caching configuration"
-            php artisan config:cache || exit 1
-
-            echo "Caching routes"
-            php artisan route:cache || exit 1
-
-            echo "Setting permissions to storage"
-            sudo chown -R www-data:www-data storage
-            sudo chmod -R 775 storage
-            sudo chown -R www-data:www-data storage/logs
-            sudo chmod -R 775 storage/logs
-            sudo systemctl restart nginx
-          EOF
+          fetch-depth: 2
+      - name: 📂 Sync folders and files to the server
+        uses: SamKirkland/FTP-Deploy-Action@4.3.3
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
