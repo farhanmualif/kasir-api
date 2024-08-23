@@ -13,11 +13,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 2
-      - name: Check Variable server
-        run: echo ${{ secrets.FTP_SERVER }}
-      - name: Check Variable username
-        run: echo ${{ secrets.FTP_USRNAME }}
-      - name: 📂 Sync folders and files to the server
+      - name: 📂 Sync folders and files to the hosting server
         uses: SamKirkland/FTP-Deploy-Action@4.3.3
         with:
           server: ${{ secrets.FTP_SERVER }}
