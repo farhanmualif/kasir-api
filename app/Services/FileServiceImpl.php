@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\Storage;
 class FileServiceImpl implements FileService
 {
 
-    public function __construct(public Storage $storage)
-    {
-    }
+    public function __construct(public Storage $storage) {}
 
     /**
      * @inheritDoc
@@ -85,24 +83,30 @@ class FileServiceImpl implements FileService
             $transaction = Transaction::where('no_transaction', $noTransaction)->first();
 
 
+            if ($transaction == null) {
+                throw new ApiException('transaction tidak ditemukan', 404);
+            }
+
+
+
             if (!$transaction->exists()) {
-                throw new ApiException('transaction tidak ditemukan');
+                throw new ApiException('transaction tidak ditemukan', 404);
             }
 
             $invoice = $transaction->invoice()->first();
             if ($invoice == null) {
-                throw new ApiException('invoice tidak ditemukan');
+                throw new ApiException('invoice tidak ditemukan', 404);
             }
 
 
             if ($invoice == null) {
-                throw new ApiException("transaction tidak ditemukan");
+                throw new ApiException("transaction tidak ditemukan", 404);
             }
 
             $path = storage_path("app/public/invoices/{$invoice->filename}");
 
             if (!file_exists($path)) {
-                abort(404);
+                throw new ApiException("file invoice tidak ditemukan", 404);
             }
 
             return $path;

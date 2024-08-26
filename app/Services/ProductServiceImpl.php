@@ -56,6 +56,9 @@ class ProductServiceImpl implements ProductService
                 ? $this->fileService->uploadProductImage($request, time() . '.' . $request->image->extension())
                 : "product-default.png";
 
+            $filename = explode("/", $filename);;
+
+
 
             $insertProduct = $this->productRepository->create([
                 "name" => $payload['name'],
@@ -63,7 +66,7 @@ class ProductServiceImpl implements ProductService
                 "stock" => intval($payload['stock']),
                 "selling_price" => intval($payload['selling_price']),
                 "purchase_price" => intval($payload['purchase_price']),
-                "image" => $filename,
+                "image" => end($filename),
             ]);
 
             if (!$insertProduct) {
@@ -381,6 +384,8 @@ class ProductServiceImpl implements ProductService
                 $newStock = $currentStock + $item['quantity_stok'];
 
                 $item['stock'] = $newStock;
+
+
 
                 $updated = $this->productRepository->updateByBarcode($item['barcode'], $item);
 
