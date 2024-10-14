@@ -12,9 +12,7 @@ use Ramsey\Uuid\Uuid;
 
 class UserServiceImpl implements UserService
 {
-    public function __construct(public UserRepository $userRepository, public Logger $logging,public StoreRepository $storeRepository)
-    {
-    }
+    public function __construct(public UserRepository $userRepository, public Logger $logging, public StoreRepository $storeRepository) {}
 
     /**
      * @inheritDoc
@@ -115,19 +113,22 @@ class UserServiceImpl implements UserService
             /* create store */
             $createStore = $this->storeRepository->create([
                 'uuid' => Uuid::uuid4()->toString(),
-                'name' => $createUser->name . '_store',
+                'name' => "{$createUser->name}_store",
                 'address' => $payload['address'],
                 'user_id' => $createUser->id
             ]);
 
             $response = [
-                'store' => $createStore->name,
-                'name' => $createUser->name,
-                'email' => $createUser->email,
-                'address' => $createStore->address
+                'status' => true,
+                'data' => [
+                    'store' => $createStore->name,
+                    'name' => $createUser->name,
+                    'email' => $createUser->email,
+                    'address' => $createStore->address
+                ]
             ];
 
-            $this->logging->info('User register successfully with Email: ' . $createUser->email);
+            $this->logging->info("User register successfully with Email: {$createUser->email}");
 
             DB::commit();
             return $response;
@@ -167,7 +168,7 @@ class UserServiceImpl implements UserService
     {
         $findUser = $this->userRepository->findByUuid($uuid);
         if (!$findUser) {
-             throw new ApiException('user tidak ditemukan');;
+            throw new ApiException('user tidak ditemukan');;
         }
         return $findUser;
     }

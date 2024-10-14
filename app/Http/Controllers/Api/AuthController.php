@@ -25,6 +25,7 @@ class AuthController extends Controller
             $validated = $request->validated();
             $createUser = $this->userServices->register($validated);
 
+
             if ($createUser['status'] == false) {
                 return responseJson('Gagal menambahkan data user, email sudah ada.', null, false, 406);
             }
