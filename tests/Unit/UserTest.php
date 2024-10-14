@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\User;
 use PHPUnit\Framework\TestCase;
 use App\Repositories\UserRepository;
 use App\Repositories\UserRepositoryImpl;
@@ -16,7 +17,9 @@ class UserTest extends TestCase
 
     public function setUp(): void
     {
-        $this->userRepository = new UserRepositoryImpl();
+
+        $user = new User();
+        $this->userRepository = new UserRepositoryImpl($user);
     }
 
     public function test_find_user_by_id(): void
