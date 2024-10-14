@@ -22,7 +22,7 @@ class AuthController extends Controller
     public function register(StoreStoreRequest $request)
     {
         $createUser = $this->userServices->register($request);
-        return responseJson('Berhasil menambahkan data user', $createUser, true, 200);
+        return responseJson('Berhasil menambahkan data user', $createUser['data'], true, 200);
     }
 
 
