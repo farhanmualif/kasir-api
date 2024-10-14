@@ -7,8 +7,8 @@ use App\Http\Requests\StoreStoreRequest;
 
 interface UserService
 {
-    public function register(StoreStoreRequest $payload);
-    public function login(LoginRequest $payload);
+    public function register(StoreStoreRequest $credential);
+    public function login(LoginRequest $credential);
     public function logout($request);
     public function getAll();
     public function getUserById(int $id);
