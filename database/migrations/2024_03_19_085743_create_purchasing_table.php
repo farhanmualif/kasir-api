@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal("total_payment");
             $table->timestamps();
 
-            $table->foreign('product_id')->references('id')->on('products');
+            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
         });
     }
 

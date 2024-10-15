@@ -24,14 +24,19 @@ class ProductStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "name" =>  'required|max:100|string',
-            "barcode" =>  'max:100|string|nullable',
-            "stock" =>  'required|max:100|numeric',
-            "selling_price" =>  'required|numeric',
-            "purchase_price" =>  'required|numeric',
-            "image" =>  'image:jpeg,png,jpg,gif,svg|max:10240',
-            "category_id" => 'numeric|nullable',
-            "description" => 'nullable|max:200',
+            'name' => 'required_without:products|max:100|string',
+            'barcode' => 'max:100|string|nullable',
+            'stock' => 'required_without:products|max:100|numeric',
+            'selling_price' => 'required_without:products|numeric',
+            'purchase_price' => 'required_without:products|numeric',
+            'image' => 'image:jpeg,png,jpg,gif,svg|max:10240',
+            'category_id' => 'numeric|nullable',
+
+            'products' => 'array',
+            'products.*.name' => 'max:100|string',
+            'products.*.uuid' => 'max:100|string',
+            'products.*.barcode' => 'required|max:100|string|nullable',
+            'products.*.quantity_stok' => 'required|max:100|numeric',
         ];
     }
 
@@ -71,10 +76,5 @@ class ProductStoreRequest extends FormRequest
             'description.nullable' => 'Deskripsi boleh kosong.',
             'description.max' => 'Deskripsi tidak boleh lebih dari 200 karakter.',
         ];
-    }
-
-    public function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(\responseJson('Validation error', $validator->errors(), false, 422));
     }
 }

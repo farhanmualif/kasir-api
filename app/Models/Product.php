@@ -9,7 +9,7 @@ class Product extends Model
 {
     use HasFactory;
     protected $fillable = [
-        "id", "uuid", "name", "barcode", "stock", "selling_price", "purchase_price", "image", "created_at", "updated_at", "link"
+        "id", "uuid", "name", "barcode", "stock", "selling_price", "purchase_price", "image", "created_at", "updated_at",
     ];
 
     /**
@@ -19,6 +19,11 @@ class Product extends Model
      */
     public function category()
     {
-        return $this->belongsToMany(Category::class, "product_category");
+        return $this->belongsToMany(Category::class, "product_category", "product_id", "category_id");
+    }
+
+    public function stores()
+    {
+        return $this->belongsToMany(Store::class, 'product_store', "product_id", "store_id");
     }
 }

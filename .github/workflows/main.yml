@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 name: 🚀 Try To Deploy Changes to cPanel
+=======
+name: Push-to-Master
+
+# Trigger deployment only on push to master branch
+>>>>>>> production
 on:
   push:
     branches:

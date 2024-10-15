@@ -20,8 +20,8 @@ return new class extends Migration
             $table->integer('quantity');
             $table->timestamps();
 
-            $table->foreign('id_transaction')->references('id')->on('transactions');
-            $table->foreign('id_product')->references('id')->on('products');
+            $table->foreign('id_transaction')->references('id')->on('transactions')->onDelete('cascade');
+            $table->foreign('id_product')->references('id')->on('products')->onDelete('restrict');
         });
     }
 

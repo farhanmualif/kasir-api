@@ -2,140 +2,95 @@
 
 namespace App\Http\Controllers;
 
+
+use App\Http\Requests\CategoryUpdateRequest;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
+use App\Http\Requests\UpdateImageProductRequest;
 use App\Http\Resources\ProductCollection;
-use App\Models\Product;
-use App\Models\Purchasing;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-
+use App\Services\FileService;
+use App\Services\ProductService;
 
 class ProductController extends Controller
 {
+
+    public function __construct(public ProductService $productServices, public FileService $fileService) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $datas = Product::all();
-        foreach ($datas as $data) {
+        $products = $this->productServices->getAll()->get();
+        foreach ($products as $data) {
             $data['link'] = \url()->current() . '/' . $data->uuid;
         }
 
-        return responseJson("produk ditemukan", ProductCollection::collection($datas));
+        return responseJson("produk ditemukan", ProductCollection::collection($products));
     }
 
     public function store(ProductStoreRequest $request)
     {
-        DB::beginTransaction();
-        try {
-            $validated = $request->validated();
 
-            $file_name = "";
-
-            if ($request->hasFile('image')) {
-                $file_name = \time() . '.' . $request->image->extension();
-                $request->image->storeAs('public/images', $file_name);
-            } else {
-                $file_name = "product-default.png";
-            }
-
-            $validated['image'] = $file_name;
-            $insert_product = Product::create($validated);
-
-            Purchasing::create([
-                'no_purchasing' => generateNoTransaction(),
-                'product_id' => $insert_product->id,
-                'quantity' => $insert_product->stock,
-                'description' => $insert_product->description,
-                'total_payment' => $insert_product->purchase_price * $insert_product->stock
-            ]);
-
-
-
-            // Simpan relasi dengan Category
-            if ($validated['category_id'] != null) {
-                $insert_product->category()->attach($validated['category_id']);
-            }
-
-            DB::commit();
-            return responseJson("berhasil tambah produk", new ProductCollection($insert_product));
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return responseJson("gagal menambahkan produk, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
-        }
+        $response = $this->productServices->create($request);
+        return responseJson("berhasil tambah produk", new ProductCollection($response));
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $uuid)
+    public function show(string $id)
     {
-        try {
-            $product = Product::where("uuid", $uuid)->first();
-            if ($product == null) {
-                return responseJson("produk tidak ditemukan", null, false, 404);
-            }
+        $product = $this->productServices->getProductByUuid($id);
+        return responseJson("produk ditemukan", new ProductCollection($product));
+    }
 
-            return responseJson("produk ditemukan", new ProductCollection($product));
-        } catch (\Throwable $th) {
-            return responseJson("get data failed {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()} {$th->getPrevious()}", null, false, 500);
-        }
+    public function showByBarcode(string $barcode)
+    {
+        $product = $this->productServices->getProductByBarcode($barcode);
+        return responseJson("produk ditemukan", new ProductCollection($product));
+    }
+
+    public function showImage(string $uuid)
+    {
+        // get path image file from fileService
+        $productImagePath = $this->fileService->getProductImage($uuid);
+
+
+        // get MIME type from file
+        $mimeType = mime_content_type($productImagePath);
+
+        return response()->file($productImagePath, [
+            "Content-Type" => $mimeType,
+        ]);
+    }
+
+    public function showByCategory(string $categoryName)
+    {
+        return responseJson("produk ditemukan", ProductCollection::collection($this->productServices->getProductByCategory($categoryName)));
+    }
+
+    public function addCategoriesToProduct(CategoryUpdateRequest $request, string $productUuid)
+    {
+        return responseJson("produk ditemukan", new ProductCollection($this->productServices->addCategoriesToProduct($request, $productUuid)));
+    }
+
+    public function removeCategoriesFromProduct(CategoryUpdateRequest $request, string $productUuid)
+    {
+        return responseJson("produk ditemukan", new ProductCollection($this->productServices->deleteCategoriesInProduct($request, $productUuid)));
     }
 
 
     public function update(ProductUpdateRequest $request, string $id)
     {
-        DB::beginTransaction();
-        try {
+        $response =  $this->productServices->updateProductByUuid($id, $request);
+        return responseJson("produk berhasil diubah", new ProductCollection($response));
+    }
 
-            $payload = $request->validated();
-            $product = Product::where("uuid", $id)->firstOrFail();
-            if (!$product) {
-                return responseJson("produk tidak ditemukan", null, false, 400);
-            }
-            $file_name = "";
-            if ($request->hasFile("image")) {
-                $file_name = time() . '.' . $request->image->extension();
-                $request->image->storeAs('images', $file_name);
-
-                Storage::delete("images", $product->image);
-            }
-            $payload["image"] = $file_name;
-            unset($payload["_method"]);
-
-            $current_stock = $product->stock;
-            if ($payload['add_or_reduce_stock'] == "add") {
-
-                $new_stock = $current_stock + $payload['quantity_stok'];
-                Product::where("uuid", $id)->update([
-                    "name" => $payload['name'],
-                    "barcode" => $payload['barcode'],
-                    "stock" => $new_stock,
-                    "selling_price" => $payload['selling_price'],
-                    "purchase_price" => $payload['purchase_price'],
-                ]);
-                DB::commit();
-
-                return responseJson("produk berhasil di update", new ProductCollection(Product::where("uuid", $id)->firstOrFail()));
-            } else if ($payload['add_or_reduce_stock'] == "reduce") {
-                $new_stock = $current_stock - $payload['quantity_stok'];
-                Product::where("uuid", $id)->update([
-                    "name" => $payload['name'],
-                    "barcode" => $payload['barcode'],
-                    "stock" => $new_stock,
-                    "selling_price" => $payload['selling_price'],
-                    "purchase_price" => $payload['purchase_price'],
-                ]);
-                DB::commit();
-            } else {
-                return responseJson("gagal update produk add_or_reduce_stok barus berisi add atau reduce", null, false, 500);
-            }
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return responseJson("gagal update produk {$th->getMessage()} {$th->getFile()} {$th->getLine()}", null, false, 500);
-        }
+    public function updateImage(UpdateImageProductRequest $request, string $id)
+    {
+        $response =  $this->productServices->updateProductImageByUuid($id, $request);
+        return responseJson("produk berhasil diubah", new ProductCollection($response));
     }
 
     /**
@@ -143,15 +98,13 @@ class ProductController extends Controller
      */
     public function destroy(string $id)
     {
-        DB::beginTransaction();
-        try {
-            Product::where("uuid", $id)->delete();
-            DB::commit();
-            return responseJson("berhadil menghapus data produk", null, true, 200);
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            DB::commit();
-            return responseJson("gagal menghapus data produk {$th->getMessage()}", null, false, 500);
-        }
+        $this->productServices->deleteProductByUuid($id);
+        return responseJson("berhasil menghapus data");
+    }
+
+    public function purchaseProductsExist(ProductStoreRequest $request)
+    {
+        $updated = $this->productServices->addExistsProducts($request);
+        return responseJson("berhasil menambah data produk", ProductCollection::collection($updated));
     }
 }

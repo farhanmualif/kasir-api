@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Category extends Model
 {
 
     use HasFactory;
 
-    protected $fillable  = ["name", "uuid"];
+    protected $fillable  = ["name", "uuid", "store_id"];
 
     protected $table = 'categories';
 
@@ -19,8 +20,13 @@ class Category extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function product()
+    public function products()
     {
-        return $this->belongsToMany(Product::class, "product_category")->onDelete('cascade');
+        return $this->belongsToMany(Product::class, 'category_product', 'category_id', 'product_id');
+    }
+
+    public function store(): BelongsTo
+    {
+        return $this->belongsTo(Store::class);
     }
 }

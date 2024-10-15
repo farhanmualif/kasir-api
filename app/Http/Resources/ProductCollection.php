@@ -18,14 +18,15 @@ class ProductCollection extends JsonResource
         return [
             "link" => $this->link,
             "id" => $this->id,
+            "stores_id" => $this->stores->first()->id,
             "uuid" => $this->uuid,
             "name" => $this->name,
-            "category" => $this->category,
             "barcode" => $this->barcode,
             "stock" => $this->stock,
             "selling_price" => $this->selling_price,
             "purchase_price" => $this->purchase_price,
             "image" => $this->image,
+            "category" => $this->category ?? null,
             "created_at" => $this->created_at,
             "updated_at" => $this->updated_at,
         ];

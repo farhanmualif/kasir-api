@@ -3,81 +3,67 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\UserRegisterRequest;
-use App\Models\User;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\StoreStoreRequest;
+use App\Services\UserService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Ramsey\Uuid\Uuid;
+
 
 class AuthController extends Controller
 {
-    public function store(UserRegisterRequest $request)
+
+    public UserService $userServices;
+
+    public function __construct(UserService $userServicess)
     {
-        DB::beginTransaction();
-        try {
-            $validated = $request->validated();
-            $validated['password'] = Hash::make($validated['password']);
-            $validated['uuid'] = Uuid::uuid4();
-            $userCreated = User::create($validated);
-
-            DB::commit();
-
-            $data = [
-                'user' => $userCreated,
-            ];
-
-            return responseJson("Berhasil mendaftarkan user", $data);
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return responseJson("Gagal mendaftarkan user, {$th->getMessage()} file: {$th->getFile()} line: {$th->getLine()}", null, false, 500);
-        }
+        $this->userServices = $userServicess;
     }
 
-    public function login(Request $request)
+    public function register(StoreStoreRequest $request)
     {
-        $payload = $request->all();
-        $check_user = User::where('email', $payload['email'])->first();
-        if (!$check_user) {
-            return responseJson('user tidak ditemukan', null, false, 404);
-        }
-        if (Auth::attempt(['email' => $payload['email'], 'password' => $payload['password']])) {
-
-            $success['token'] = $request->user()->createToken('token-name', ['server:update'])->plainTextToken;
-            $success['uuid'] = $request->user()['uuid'];
-            $success['user'] = $request->user()['name'];
-            $success['email'] = $request->user()['email'];
-
-            return responseJson('berhasil login', $success);
-        } else {
-            return responseJson('terjadi kesalahan', null, true, 500);
-        }
+        $createUser = $this->userServices->register($request);
+        return responseJson('Berhasil menambahkan data user', $createUser['data'], true, 200);
     }
 
-    public function checkAuth()
+
+    public function login(LoginRequest $request)
+    {
+        $loginUser = $this->userServices->login($request);
+        return responseJson("berhasil login", $loginUser, true, 202);
+    }
+
+    public function authenticated()
     {
         try {
             $auth = auth('sanctum')->check();
             if (!$auth) {
-                return \responseJson("uauthenticated", null, false, 400);
+                return \responseJson("unauthenticated", null, false, 400);
             }
             return \responseJson("authenticated", null);
         } catch (\Throwable $th) {
-            return false;
+            return \responseJson("server problem", "{$th->getMessage()}", false, 500);
         }
     }
     public function logout(Request $request)
     {
         try {
             $check_header = $request->header('Authorization');
-            if ($check_header == \null) {
-                return responseJson('anda belum login', null, false, 404);
+
+            if ($check_header == null) {
+                return responseJson('Token tidak ditemukan, silakan login terlebih dahulu', null, false, 404);
             }
 
-            $user = auth('sanctum')->user();
-            $user->tokens()->delete();
+            $token = $request->user()->currentAccessToken();
 
+            if (!$token->exists()) {
+                return responseJson('Token tidak ditemukan', null, false, 404);
+            }
+
+            $deleteToken = $this->userServices->logout($token);
+
+            if (!$deleteToken) {
+                return responseJson('gagal melakukan logout', null, false, 404);
+            }
             return responseJson("berhasil logout", null, true, 200);
         } catch (\Throwable $th) {
             return responseJson("terjadi kesalahan: {$th->getMessage()}", null, true, 200);
