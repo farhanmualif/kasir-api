@@ -1,4 +1,4 @@
-name: Deploy to DigitaOcean
+name: Deploy to DigitalOcean
 
 on:
   push:
@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -19,22 +21,49 @@ jobs:
       - name: Install dependencies
         env:
           COMPOSER_ALLOW_SUPERUSER: 1
-        run: composer install --no-dev --prefer-dist --no-interaction
+        run: composer install --no-dev --prefer-dist --no-interaction --no-progress
 
       - name: Deploy to server
         uses: appleboy/ssh-action@master
+        env:
+          COMPOSER_ALLOW_SUPERUSER: 1
         with:
           host: ${{ secrets.OCEAN_HOST }}
           username: ${{ secrets.OCEAN_USERNAME }}
           key: ${{ secrets.OCEAN_SSH_PRIVATE_KEY }}
           script: |
             cd ${{ secrets.OCEAN_PROJECT_PATH }}
-            git fetch origin
+            git fetch --all
             git checkout -f production
             git pull origin production
-            composer install --no-dev --prefer-dist --no-interaction
+
+            # Install dependencies
+            composer install --no-dev --prefer-dist --no-interaction --no-progress
+
+            # Fix permissions
+            sudo chown -R www-data:www-data storage bootstrap/cache
+            sudo chmod -R 775 storage bootstrap/cache
+
+            # Clear existing caches
+            php artisan config:clear
+            php artisan route:clear
+            php artisan view:clear
+            php artisan cache:clear
+
+            # Run migrations
             php artisan migrate --force
+
+            # Regenerate caches
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
+
+            # Optimize
+            php artisan optimize
+
+            # Restart web server
             sudo systemctl restart apache2
+
+            # Output deployment info
+            echo "Deployment completed at $(date)"
+            php artisan --version
