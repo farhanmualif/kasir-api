@@ -17,6 +17,8 @@ jobs:
           php-version: "8.2"
 
       - name: Install dependencies
+        env:
+          COMPOSER_ALLOW_SUPERUSER: 1
         run: composer install --no-dev --prefer-dist --no-interaction
 
       - name: Deploy to server
@@ -27,7 +29,9 @@ jobs:
           key: ${{ secrets.OCEAN_SSH_PRIVATE_KEY }}
           script: |
             cd ${{ secrets.OCEAN_PROJECT_PATH }}
-            git pull origin main
+            git fetch origin
+            git checkout -f production
+            git pull origin production
             composer install --no-dev --prefer-dist --no-interaction
             php artisan migrate --force
             php artisan config:cache
