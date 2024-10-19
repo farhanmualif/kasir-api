@@ -31,6 +31,6 @@ class Transaction extends Model
      */
     public function invoice()
     {
-        return $this->hasOne(Invoices::class);
+        return $this->hasOne(Invoice::class);
     }
 }

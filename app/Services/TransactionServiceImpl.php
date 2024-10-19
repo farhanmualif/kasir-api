@@ -5,7 +5,7 @@ namespace App\Services;
 
 use App\Exceptions\ApiException;
 use App\Http\Requests\TransactionStoreRequest;
-use App\Models\Invoices;
+use App\Models\Invoice;
 use App\Repositories\DetailTransactionRepository;
 use App\Repositories\ProductRepository;
 use App\Repositories\TransactionRepository;
@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
 class TransactionServiceImpl implements TransactionService
 {
 
-    public function __construct(public TransactionRepository $transactionRepository, public DetailTransactionRepository $detailTransaction, public ProductRepository $productRepository, public Invoices $invoices) {}
+    public function __construct(public TransactionRepository $transactionRepository, public DetailTransactionRepository $detailTransaction, public ProductRepository $productRepository, public Invoice $invoices) {}
 
     /**
      * @inheritDoc
