@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductCategory;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -11,15 +12,21 @@ use Illuminate\Support\Str;
 class ProductRepositoryImpl implements ProductRepository
 {
 
-    public function __construct(public Product $product, public Category $category, public AuthManager $auth) {}
+    public function __construct(public Product $product, public Category $category, public AuthManager $auth, public ProductCategory $productCategory) {}
 
     /**
      * @inheritDoc
      */
     public function create(array $data)
     {
-        $data['uuid'] =  Str::uuid();
-        return $this->product->create($data);
+        $data['uuid'] = Str::uuid();
+        $product = $this->product->create($data);
+        
+        if (isset($data['category_id'])) {
+            $product->category()->attach($data['category_id']);
+        }
+        
+        return $product;
     }
 
     /**

@@ -52,20 +52,31 @@ class CategoryRepositoryImpl implements CategoryRepository
         try {
             $storeId = Auth::user()->stores->first()->id;
 
-            return $this->category->select(
+            $categories = $this->category->select(
                 'categories.id as id',
                 'categories.uuid as uuid',
                 'categories.name as name',
-                DB::raw('COALESCE(SUM(products.purchase_price * products.stock), 0) as capital'),
-                DB::raw('CAST(COALESCE(SUM(products.stock), 0) AS SIGNED) as remaining_stock'),
+                DB::raw('FORMAT(COALESCE(SUM(products.purchase_price * products.stock), 0), 2) as capital'),
+                DB::raw('COALESCE(SUM(products.stock), 0) as remaining_stock'),
                 'categories.created_at',
                 'categories.updated_at'
             )
-                ->leftJoin('product_category', 'product_category.category_id', 'categories.id')
-                ->leftJoin('products', 'product_category.product_id', 'products.id')
-                ->where('categories.store_id', '=', $storeId)
-                ->groupBy('categories.id', 'categories.uuid', 'categories.name', 'categories.created_at', 'categories.updated_at')->orderBy('categories.created_at', 'desc')->get();
-            // dd($categories);
+            ->leftJoin('product_category', 'product_category.category_id', 'categories.id')
+            ->leftJoin('products', 'product_category.product_id', 'products.id')
+            ->where('categories.store_id', '=', $storeId)
+            ->groupBy('categories.id', 'categories.uuid', 'categories.name', 'categories.created_at', 'categories.updated_at')
+            ->orderBy('categories.created_at', 'desc')
+            ->get();
+    
+            // Transform the result to include the link
+            $result = $categories->map(function ($category) {
+                $category->link = url('/api/category/' . $category->uuid);
+                $category->capital = (int)$category->capital; // Ensure capital is an integer
+                $category->remaining_stock = (int)$category->remaining_stock; // Ensure remaining_stock is an integer
+                return $category;
+            });
+
+            return $result;
         } catch (\Throwable $th) {
             throw new ApiException($th->getMessage());
         }

@@ -22,6 +22,7 @@ use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 
 class ProductServiceImpl implements ProductService
@@ -52,6 +53,14 @@ class ProductServiceImpl implements ProductService
                 throw new ApiException('Harga jual tidak boleh lebih rendah dari harga beli. Pastikan harga jual lebih tinggi atau sama dengan harga beli.');
             }
 
+            // Validate category existence if category_id is provided
+            if (isset($payload['category_id'])) {
+                $category = $this->categoryRepository->findById($payload['category_id']);
+                if (!$category) {
+                    throw new ApiException('Kategori tidak ditemukan');
+                }
+            }
+
             $filename = $request->hasFile('image')
                 ? $this->fileService->uploadProductImage($request, time() . '.' . $request->image->extension())
                 : "product-default.png";
@@ -67,6 +76,7 @@ class ProductServiceImpl implements ProductService
                 "selling_price" => intval($payload['selling_price']),
                 "purchase_price" => intval($payload['purchase_price']),
                 "image" => end($filename),
+                "category_id" => $payload['category_id'] ?? null,
             ]);
 
             if (!$insertProduct) {
@@ -279,19 +289,37 @@ class ProductServiceImpl implements ProductService
     public function updateProductImageByUuid($uuid, UpdateImageProductRequest $request)
     {
         try {
-            $payload = $request->validated();
-            if (!$request->hasFile('image')) {
-                throw new ApiException('image tidak ditemukan', 400);
+            DB::beginTransaction();
+
+            $file = $request->file('image');
+            if (!$file || !$file->isValid()) {
+                throw new ApiException('File upload tidak valid', 400);
             }
+
             $currentProduct = $this->productRepository->getByUuid($uuid);
-            $currentProduct['image'] == 'product-default.png' ?: $this->fileService->deleteProductImage($payload['image']);
-            $filename =  time() . '.' . $request->image->extension();
-            $this->fileService->uploadProductImage($payload, $filename);
+            if (!$currentProduct) {
+                throw new ApiException('Produk tidak ditemukan', 404);
+            }
+
+            // Hapus gambar lama jika bukan default
+            if ($currentProduct->image && $currentProduct->image !== 'product-default.png') {
+                Storage::disk('public')->delete('images/' . $currentProduct->image);
+            }
+
+            // Upload gambar baru
+            $filename = time() . '.' . $file->getClientOriginalExtension();
+            $path = $this->fileService->uploadProductImage($request, $filename);
+
+            // Update database dengan nama file baru
             $this->productRepository->updateByUuid($uuid, [
                 'image' => $filename
             ]);
+
+            DB::commit();
             return $this->productRepository->getByUuid($uuid);
+
         } catch (\Throwable $th) {
+            DB::rollBack();
             throw new ApiException($th->getMessage());
         }
     }
