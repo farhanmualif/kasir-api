@@ -87,11 +87,12 @@ class FileServiceImpl implements FileService
     {
 
         try {
-            $productImage = Product::where("uuid", $uuid)->first();
-            if ($productImage == null) {
+            $product = Product::where("uuid", $uuid)->first();
+            // dd($product);
+            if ($product == null) {
                 throw new ApiException("Produk tidak ditemukan");
             }
-            $path = storage_path("app/public/images/{$productImage->image}");
+            $path = storage_path("app/public/images/{$product->image}");
 
             if (!file_exists($path)) {
                 abort(404);

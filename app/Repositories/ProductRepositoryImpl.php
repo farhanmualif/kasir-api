@@ -21,11 +21,11 @@ class ProductRepositoryImpl implements ProductRepository
     {
         $data['uuid'] = Str::uuid();
         $product = $this->product->create($data);
-        
+
         if (isset($data['category_id'])) {
             $product->category()->attach($data['category_id']);
         }
-        
+
         return $product;
     }
 
@@ -50,7 +50,16 @@ class ProductRepositoryImpl implements ProductRepository
      */
     public function deleteByUuid(string $uuid)
     {
-        return $this->product->where('uuid', $uuid)->delete();
+        $product = $this->product->where('uuid', $uuid)->first();
+
+        // Hapus relasi dengan category
+        $product->category()->detach();
+
+        // Hapus relasi dengan store
+        $product->stores()->detach();
+
+        // Hapus produk
+        return $product->delete();
     }
 
     /**

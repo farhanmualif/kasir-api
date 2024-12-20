@@ -9,9 +9,7 @@ use App\Services\SalesReportService;
 class RaportController extends Controller
 {
 
-    public function __construct(public SalesReportService $salesReportService, public PurchaseReportService $purchaseReportService)
-    {
-    }
+    public function __construct(public SalesReportService $salesReportService, public PurchaseReportService $purchaseReportService) {}
     public function getDailySales($date)
     {
         return \responseJson("berhasil mendapatkan data penjualan", $this->salesReportService->getDailySales($date));
