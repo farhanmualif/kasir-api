@@ -38,6 +38,9 @@ jobs:
           port: 22
           script_stop: true
           script: |
+            # Tambahkan safe directory
+            git config --global --add safe.directory /var/www/kasir-api
+
             cd /var/www/kasir-api
 
             # Pull latest changes
