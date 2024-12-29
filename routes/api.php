@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\BarcodeController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RaportController;
 use App\Http\Controllers\TransactionController;
@@ -24,9 +25,15 @@ use Illuminate\Support\Facades\Route;
 Route::post('login', [AuthController::class, 'login']);
 Route::post('register', [AuthController::class, 'register']);
 Route::get('authenticated', [AuthController::class, 'authenticated']);
+// ... existing routes ...
+Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword']);
+Route::post('/verify-token', [PasswordResetController::class, 'verifyToken']); // endpoint baru
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
 
 
 Route::middleware(['auth:sanctum'])->group(function () {
+
+
 
     Route::resource('products', ProductController::class);
     Route::resource('barcode', BarcodeController::class);
