@@ -1,69 +1,53 @@
-name: Deploy to DigitalOcean
+name: Deploy to Production
 
 on:
   push:
-    branches: [production]
+    branches: [ production ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v2
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.2"
-
-      - name: Install dependencies
-        env:
-          COMPOSER_ALLOW_SUPERUSER: 1
-        run: composer install --no-dev --prefer-dist --no-interaction --no-progress
-
-      - name: Deploy to server
+      - name: Deploy to Digital Ocean
         uses: appleboy/ssh-action@master
-        env:
-          COMPOSER_ALLOW_SUPERUSER: 1
         with:
-          host: ${{ secrets.OCEAN_HOST }}
-          username: ${{ secrets.OCEAN_USERNAME }}
-          key: ${{ secrets.OCEAN_SSH_PRIVATE_KEY }}
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ${{ secrets.OCEAN_PROJECT_PATH }}
-            git fetch --all
-            git checkout -f production
-            git pull origin production
+            cd /var/www/kasir-api
+
+            # Pull latest changes
+            echo "Pulling latest changes..."
+            git pull origin production || exit 1
 
             # Install dependencies
-            composer install --no-dev --prefer-dist --no-interaction --no-progress
+            echo "Installing dependencies..."
+            composer install --no-interaction --prefer-dist --optimize-autoloader || exit 1
 
-            # Fix permissions
-            sudo chown -R www-data:www-data storage bootstrap/cache
-            sudo chmod -R 775 storage bootstrap/cache
-
-            # Clear existing caches
-            php artisan config:clear
-            php artisan route:clear
-            php artisan view:clear
-            php artisan cache:clear
+            # Clear and cache configurations
+            echo "Caching configurations..."
+            php artisan config:clear || exit 1
+            php artisan cache:clear || exit 1
+            php artisan config:cache || exit 1
+            php artisan route:cache || exit 1
+            php artisan view:cache || exit 1
 
             # Run migrations
-            php artisan migrate --force
+            echo "Running migrations..."
+            php artisan migrate --force || exit 1
 
-            # Regenerate caches
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
+            # Fix permissions
+            echo "Setting permissions..."
+            sudo chown -R www-data:www-data .
+            sudo find . -type f -exec chmod 644 {} \;
+            sudo find . -type d -exec chmod 755 {} \;
+            sudo chmod -R 775 storage bootstrap/cache
 
-            # Optimize
-            php artisan optimize
+            # Restart Apache
+            echo "Restarting Apache..."
+            sudo systemctl restart apache2 || exit 1
 
-            # Restart web server
-            sudo systemctl restart apache2
-
-            # Output deployment info
-            echo "Deployment completed at $(date)"
-            php artisan --version
+            echo "Deployment completed successfully!"
