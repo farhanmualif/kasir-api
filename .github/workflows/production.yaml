@@ -43,9 +43,17 @@ jobs:
 
             cd /var/www/kasir-api
 
+            # Backup perubahan lokal
+            echo "Backing up local changes..."
+            git stash || true
+
             # Pull latest changes
             echo "Pulling latest changes..."
             git pull origin production || exit 1
+
+            # Opsional: Apply kembali perubahan lokal jika diperlukan
+            # echo "Restoring local changes..."
+            # git stash pop || true
 
             # Install dependencies
             echo "Installing dependencies..."
