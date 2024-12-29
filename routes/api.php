@@ -62,4 +62,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('invoices/{noTransaction}', [TransactionController::class, 'showSalesInvoice']);
 
     Route::post('logout', [AuthController::class, 'logout']);
+    Route::get('/user', [UserController::class, 'getUser']);
+
 });

@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\StoreStoreRequest;
+use App\Models\User;
+use Illuminate\Support\Str;
 
 interface UserService
 {
@@ -23,4 +25,5 @@ interface UserService
     public function deleteByEmail(string $email);
     public function deleteById(string $id);
     public function deleteByUuid(string $uuid);
+    public function getUserWithStore($userId);
 }

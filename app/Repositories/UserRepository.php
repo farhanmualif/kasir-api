@@ -22,4 +22,5 @@ interface UserRepository
     function updateByUuid(string $uuid, array $payload);
     function deleteToken(string $tokenId);
     function revokeCurrentToken(string $token);
+    function getUserWithStore(string $userUuid);
 }

@@ -8,9 +8,7 @@ use App\Repositories\StoreRepository;
 class StoreRepositoryImpl implements StoreRepository
 {
 
-    public function __construct(public Store $store)
-    {
-    }
+    public function __construct(public Store $store) {}
 
     /**
      * @inheritDoc
@@ -104,5 +102,13 @@ class StoreRepositoryImpl implements StoreRepository
     public function deleteByUserUuid($userUuid)
     {
         return  $this->store->user()->where('uuid', $userUuid)->delete();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function findStoreByUserUuid($userUuid)
+    {
+        return $this->store->where('user_id', $userUuid)->first();
     }
 }

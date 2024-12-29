@@ -14,4 +14,5 @@ interface StoreRepository
     public function findByUuid($uuid);
     public function getByUuid($uuid);
     public function getByd($id);
+    public function findStoreByUserUuid($userUuid);
 }

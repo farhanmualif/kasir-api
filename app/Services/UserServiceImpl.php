@@ -232,4 +232,34 @@ class UserServiceImpl implements UserService
     {
         return $this->userRepository->deleteByUuid($uuid);
     }
+
+    /**
+     * Get user with their store data
+     * @param int $userId
+     * @return mixed
+     */
+    public function getUserWithStore($userUuid)
+    {
+        try {
+            $findUser = $this->userRepository->findById($userUuid);
+            // dd($userUuid);
+            if (!$findUser) {
+                throw new ApiException('user tidak ditemukan', 404);
+            }
+
+            $user = $this->userRepository->getById($userUuid);
+            // dd($userUuid);
+
+            // Get store data
+            $store = $this->storeRepository->findStoreByUserUuid($userUuid);
+
+            // Combine user and store data
+            $user->store = $store;
+
+            return $user;
+        } catch (\Throwable $th) {
+            $this->logging->error("Error getting user with store: {$th->getMessage()}");
+            throw new ApiException($th->getMessage());
+        }
+    }
 }

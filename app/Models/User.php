@@ -52,6 +52,13 @@ class User extends Authenticatable
         return $this->hasMany(Store::class);
     }
 
+    /**
+     * Get the store associated with the user.
+     */
+    public function store()
+    {
+        return $this->hasOne(Store::class);
+    }
 
     public function sendPasswordResetNotification($token)
     {
