@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -13,10 +14,14 @@ return new class extends Migration
     {
         Schema::create('discounts', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('product_id');
-            $table->decimal('discount');
-
-            $table->foreign('product_id')->references('id')->on('products');
+            $table->uuid()->unique()->default(value: DB::raw('(UUID())'));
+            $table->string('title', 100);
+            $table->enum('type', ['percentage', 'fixed']);
+            $table->decimal('value', 10, 2);
+            $table->unsignedBigInteger('store_id');
+            $table->foreign('store_id')->references('id')->on('stores');
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

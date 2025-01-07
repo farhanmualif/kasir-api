@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Transaction extends Model
 {
     use HasFactory;
-    protected $fillable  = ["total_payment", "no_transaction", "cash", "change", "income", "profit"];
+    protected $fillable  = ["total_payment", "no_transaction", "cash", "change", "income", "profit", "discount_id"];
 
     protected $table = "transactions";
 

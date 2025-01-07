@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\BarcodeController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RaportController;
@@ -40,6 +41,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('user', UserController::class);
     Route::resource('transaction', TransactionController::class);
     Route::resource('category', CategoryController::class);
+    Route::apiResource('discounts', DiscountController::class);
 
     Route::post('products/purchase/existing', [ProductController::class, 'purchaseProductsExist']);
     Route::post('products/upload', [ProductController::class, 'uploadImage']);
@@ -61,7 +63,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('transaction/{noTransaction}/invoice', [TransactionController::class, 'showInvoice']);
     Route::get('invoices/{noTransaction}', [TransactionController::class, 'showSalesInvoice']);
 
+
+
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('/user', [UserController::class, 'getUser']);
-
 });

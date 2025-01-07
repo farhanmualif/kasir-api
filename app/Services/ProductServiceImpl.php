@@ -317,7 +317,6 @@ class ProductServiceImpl implements ProductService
 
             DB::commit();
             return $this->productRepository->getByUuid($uuid);
-
         } catch (\Throwable $th) {
             DB::rollBack();
             throw new ApiException($th->getMessage());

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
 class TransactionServiceImpl implements TransactionService
 {
 
-    public function __construct(public TransactionRepository $transactionRepository, public DetailTransactionRepository $detailTransaction, public ProductRepository $productRepository, public Invoice $invoices) {}
+    public function __construct(public TransactionRepository $transactionRepository, public DetailTransactionRepository $detailTransaction, public ProductRepository $productRepository, public Invoice $invoices, public DiscountService $discountService) {}
 
     /**
      * @inheritDoc
@@ -25,7 +25,6 @@ class TransactionServiceImpl implements TransactionService
     {
         DB::beginTransaction();
         try {
-
             $payloadValidate = $request->validated();
             $transaction = $payloadValidate['transaction'];
             $totalPayment = 0;
@@ -33,14 +32,12 @@ class TransactionServiceImpl implements TransactionService
             $storeId = [];
 
             foreach ($transaction['items'] as $item) {
-
                 $findProduct = $this->productRepository->findById($item['id_product']);
                 $storeId[] = $findProduct->stores()->first()->id;
 
                 if (!$findProduct) {
                     throw new ApiException("product dengan id {$item['id_product']} tidak ditemukan");
                 }
-
 
                 $products[$item['id_product']] = $findProduct;
 
@@ -53,45 +50,71 @@ class TransactionServiceImpl implements TransactionService
                 }
             }
 
-            // validation, whether the Products are from different stores
+            // Validasi store
             $count = array_count_values($storeId);
             if (count($count) !== 1) {
                 throw new ApiException('Transaksi tidak dapat diproses. Produk berasal dari toko yang berbeda.');
             }
 
-
+            // Hitung total pembayaran sebelum diskon
+            $totalBeforeDiscount = 0;
             foreach ($transaction['items'] as $item) {
-                $currenProduct = $products[$item['id_product']];
-                $totalPayment += $item['quantity'] * $currenProduct->selling_price;
+                $currentProduct = $products[$item['id_product']];
+                $totalBeforeDiscount += $item['quantity'] * $currentProduct->selling_price;
             }
 
+            // Cek dan terapkan diskon jika ada
+            $discount = null;
+            $discountAmount = 0;
+            if (isset($transaction['discount_uuid'])) {
+                $discount = $this->discountService->getByUuId($transaction['discount_uuid']);
+
+                if ($discount) {
+                    // Hitung diskon
+                    if ($discount->type === 'percentage') {
+                        $discountAmount = $totalBeforeDiscount * ($discount->value / 100);
+                    } else { // fixed
+                        $discountAmount = $discount->value;
+                    }
+                }
+            }
+
+            // Hitung total pembayaran setelah diskon
+            $totalPayment = $totalBeforeDiscount - $discountAmount;
+
+            // Validasi cash
             if ($transaction['cash'] < $totalPayment) {
-                throw new ApiException("gagal menambahkan data transaction, cash kurang dari total transaction");
+                throw new ApiException("Gagal menambahkan data transaksi, cash kurang dari total transaksi");
             }
 
+            // Buat transaksi
             $insertTransaction = $this->transactionRepository->create([
                 "no_transaction" => generateNoTransaction(),
                 "total_payment" => $totalPayment,
                 "cash" => $transaction['cash'],
+                "discount_id" => $discount ? $discount->id : null, // Simpan ID diskon jika ada
             ]);
 
+            // Buat detail transaksi
             foreach ($transaction['items'] as $item) {
-                $currenProduct = $products[$item['id_product']];
+                $currentProduct = $products[$item['id_product']];
                 $this->detailTransaction->create([
                     "id_transaction" => $insertTransaction->id,
                     "id_product" => $item['id_product'],
-                    "item_price" => $currenProduct->selling_price,
+                    "item_price" => $currentProduct->selling_price,
                     "quantity" => $item['quantity'],
-                    "total_price" => $currenProduct->selling_price * $item['quantity'],
+                    "total_price" => $currentProduct->selling_price * $item['quantity'],
                 ]);
 
-                $currenProduct->stock -= $item['quantity'];
-                $currenProduct->save();
+                // Kurangi stok
+                $currentProduct->stock -= $item['quantity'];
+                $currentProduct->save();
             }
 
-
+            // Generate invoice
             $pdfFilename = $this->generateInvoice($insertTransaction->no_transaction);
 
+            // Simpan invoice
             $this->invoices->create([
                 'transaction_id' => $insertTransaction->id,
                 'filename' => $pdfFilename
