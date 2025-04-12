@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Transaction extends Model
 {
     use HasFactory;
-    protected $fillable  = ["total_payment", "no_transaction", "cash", "change", "income", "profit"];
+    protected $fillable  = ["total_payment", "no_transaction", "cash", "change", "income", "profit", "discount_id"];
 
     protected $table = "transactions";
 
@@ -31,6 +31,6 @@ class Transaction extends Model
      */
     public function invoice()
     {
-        return $this->hasOne(Invoices::class);
+        return $this->hasOne(Invoice::class);
     }
 }

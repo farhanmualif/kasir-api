@@ -34,8 +34,8 @@ class SalesReportServiceImpl implements SalesReportService
                     $organizedData[$transaction->transaction_id] = [
                         'time' => $transaction->time,
                         'id_store' => $transaction->store_id,
-                        'revenue' => $transaction->revenue,
-                        'profit' => $transaction->profit,
+                        'revenue' => (int)$transaction->revenue,
+                        'profit' => (int)$transaction->profit,
                         'no_transaction' => $transaction->no_transaction,
                         'items' => []
                     ];

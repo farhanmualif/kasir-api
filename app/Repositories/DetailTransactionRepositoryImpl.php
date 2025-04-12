@@ -1,14 +1,14 @@
 <?php
+
 namespace App\Repositories;
+
 use App\Models\DetailTransaction as ModelsDetailTransaction;
 
 
 class DetailTransactionRepositoryImpl implements DetailTransactionRepository
 {
 
-    public function __construct(public ModelsDetailTransaction $detailTransaction)
-    {
-    }
+    public function __construct(public ModelsDetailTransaction $detailTransaction) {}
 
     /**
      * @inheritDoc

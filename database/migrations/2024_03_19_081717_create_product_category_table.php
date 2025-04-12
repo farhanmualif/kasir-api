@@ -15,7 +15,9 @@ return new class extends Migration
 
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('category_id');
-            
+            // Menambahkan primary key
+            $table->primary(['product_id', 'category_id']);
+
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade')->onUpdate('cascade');
         });

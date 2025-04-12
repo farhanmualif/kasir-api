@@ -12,9 +12,7 @@ use Illuminate\Support\Facades\DB;
 class UserController extends Controller
 {
 
-    public function __construct(public UserService $userService, public StoreService $storeServices)
-    {
-    }
+    public function __construct(public UserService $userService, public StoreService $storeServices) {}
     /**
      * Display a listing of the resource.
      */
@@ -24,11 +22,23 @@ class UserController extends Controller
     }
 
     /**
+     * Get authenticated user data
+     */
+    public function getUser()
+    {
+        try {
+            $user = auth()->user();
+            $userData = $this->userService->getUserWithStore($user->id);
+            return responseJson('Data user ditemukan', $userData);
+        } catch (\Throwable $th) {
+            return responseJson('Gagal mengambil data user', "{$th->getMessage()} {$th->getFile()} {$th->getLine()}", false, 500);
+        }
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
-    public function create(StoreStoreRequest $request)
-    {
-    }
+    public function create(StoreStoreRequest $request) {}
 
     /**
      * Store a newly created resource in storage.

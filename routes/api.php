@@ -3,6 +3,8 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BarcodeController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RaportController;
 use App\Http\Controllers\TransactionController;
@@ -23,15 +25,22 @@ use Illuminate\Support\Facades\Route;
 Route::post('login', [AuthController::class, 'login']);
 Route::post('register', [AuthController::class, 'register']);
 Route::get('authenticated', [AuthController::class, 'authenticated']);
+// ... existing routes ...
+Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword']);
+Route::post('/verify-token', [PasswordResetController::class, 'verifyToken']); // endpoint baru
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
 
 
 Route::middleware(['auth:sanctum'])->group(function () {
+
+
 
     Route::resource('products', ProductController::class);
     Route::resource('barcode', BarcodeController::class);
     Route::resource('user', UserController::class);
     Route::resource('transaction', TransactionController::class);
     Route::resource('category', CategoryController::class);
+    Route::apiResource('discounts', DiscountController::class);
 
     Route::post('products/purchase/existing', [ProductController::class, 'purchaseProductsExist']);
     Route::post('products/upload', [ProductController::class, 'uploadImage']);
@@ -53,5 +62,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('transaction/{noTransaction}/invoice', [TransactionController::class, 'showInvoice']);
     Route::get('invoices/{noTransaction}', [TransactionController::class, 'showSalesInvoice']);
 
+
+
     Route::post('logout', [AuthController::class, 'logout']);
+    Route::get('/user', [UserController::class, 'getUser']);
 });

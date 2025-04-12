@@ -8,9 +8,7 @@ use Laravel\Sanctum\PersonalAccessToken;
 class UserRepositoryImpl implements UserRepository
 {
 
-    public function __construct(public User $user)
-    {
-    }
+    public function __construct(public User $user) {}
 
     function getAll()
     {
@@ -27,9 +25,9 @@ class UserRepositoryImpl implements UserRepository
 
     function getById($id)
     {
-
-        return $this->user->find($id)->first();
+        return $this->user->find($id);
     }
+
     function getByUuid(string $uuid)
     {
         return $this->user->where('uuid', $uuid)->first();
@@ -95,5 +93,9 @@ class UserRepositoryImpl implements UserRepository
     {
         return $this->user->where('uuid', $uuid)->update($payload);
     }
-    
+
+    public function getUserWithStore(string $userUuid)
+    {
+        return $this->user->where('uuid', $userUuid)->with('store')->first();
+    }
 }
