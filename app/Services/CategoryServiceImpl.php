@@ -11,13 +11,12 @@ use App\Repositories\ProductRepository;
 use App\Services\CategoryService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Ramsey\Uuid\Uuid;
 
 class CategoryServiceImpl implements CategoryService
 {
 
-    public function __construct(public CategoryRepository $categoryRepository, public ProductRepository $productRepository)
-    {
-    }
+    public function __construct(public CategoryRepository $categoryRepository, public ProductRepository $productRepository) {}
 
     /**
      * @inheritDoc
@@ -34,6 +33,10 @@ class CategoryServiceImpl implements CategoryService
             foreach ($findCategory as $store) {
                 array_push($stores, strtolower($store["name"]));
             }
+
+            /** generate uuid */
+            $uuid = Uuid::uuid4();
+            $data['uuid'] = $uuid;
 
             if (in_array(strtolower($data['name']), $stores)) throw new ApiException("category sudah ada");
             $data["store_id"] = $storeId;
@@ -118,9 +121,7 @@ class CategoryServiceImpl implements CategoryService
     /**
      * @inheritDoc
      */
-    public function updateById(int $id, CategoryStoreRequest $data)
-    {
-    }
+    public function updateById(int $id, CategoryStoreRequest $data) {}
 
     /**
      * @inheritDoc

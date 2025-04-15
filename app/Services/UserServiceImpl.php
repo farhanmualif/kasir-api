@@ -95,7 +95,6 @@ class UserServiceImpl implements UserService
         try {
 
             /** check any user in database */
-
             $payload["uuid"] = Uuid::uuid4();
 
             if ($this->userRepository->findByEmail($payload['email'])) {
@@ -103,7 +102,6 @@ class UserServiceImpl implements UserService
             }
 
             /* insert user */
-
             $createUser = $this->userRepository->create([
                 'name' => $payload['name'],
                 'email' => $payload['email'],
