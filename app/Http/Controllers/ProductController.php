@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateImageProductRequest;
 use App\Http\Resources\ProductCollection;
 use App\Services\FileService;
 use App\Services\ProductService;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -54,31 +55,22 @@ class ProductController extends Controller
 
     public function showImage(string $uuid)
     {
-        try {
-            $imageData = $this->fileService->getProductImage($uuid);
-            
-            return response()->stream(
-                function () use ($imageData) {
-                    fpassthru($imageData['stream']);
-                    if (is_resource($imageData['stream'])) {
-                        fclose($imageData['stream']);
-                    }
-                },
-                200,
-                [
-                    "Content-Type" => $imageData['mime_type'],
-                    "Content-Disposition" => 'inline; filename="' . $imageData['file_name'] . '"'
-                ]
-            );
-        } catch (ApiException $e) {
-            return response()->json([
-                'error' => $e->getMessage()
-            ], 404);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Internal server error'
-            ], 500);
-        }
+
+        $imageData = $this->fileService->getProductImage($uuid);
+
+        return response()->stream(
+            function () use ($imageData) {
+                fpassthru($imageData['stream']);
+            },
+            200,
+            [
+                "Content-Type" => $imageData['mime_type'],
+                "Content-Disposition" => 'inline; filename="' . $imageData['file_name'] . '"',
+                "Access-Control-Allow-Origin" => "http://localhost:5173",
+                "Access-Control-Allow-Methods" => "GET, OPTIONS",
+                "Access-Control-Allow-Headers" => "Authorization, Content-Type",
+            ]
+        );
     }
 
     public function showByCategory(string $categoryName)

@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use App\Services\FileService;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class FileServiceImpl implements FileService
@@ -69,22 +70,27 @@ class FileServiceImpl implements FileService
      */
     public function getProductImage(string $uuid)
     {
-        $product = Product::where("uuid", $uuid)->firstOrFail(); // Auto 404
-        
-        $path = "product/{$product->image}";
-
-        if (!Storage::disk('s3')->exists($path)) {
-            abort(404, 'Image not found');
-        }
-
         try {
+            $product = Product::where("uuid", $uuid)->first();
+
+            if (!$product) {
+                throw new ApiException("Produk tidak ditemukan");
+            }
+
+            $path = "product/images/{$product->image}";
+
+            if (!Storage::disk('s3')->exists($path)) {
+                throw new ApiException("Gambar tidak ditemukan di S3");
+            }
+
             return [
                 'stream' => Storage::disk('s3')->readStream($path),
                 'mime_type' => Storage::disk('s3')->mimeType($path),
                 'file_name' => $product->image
             ];
-        } catch (\Exception $e) {
-            throw new ApiException('Failed to retrieve image');
+        } catch (\Exception $th) {
+            Log::error("Error fetching image for UUID {$uuid}: {$th->getMessage()}");
+            throw new ApiException($th->getMessage());
         }
     }
 
