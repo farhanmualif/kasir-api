@@ -69,23 +69,23 @@ class FileServiceImpl implements FileService
      */
     public function getProductImage(string $uuid)
     {
-        $product = Product::where("uuid", $uuid)->first();
-
-        if (!$product) {
-            throw new ApiException("Produk tidak ditemukan");
-        }
-
+        $product = Product::where("uuid", $uuid)->firstOrFail(); // Auto 404
+        
         $path = "product/{$product->image}";
 
         if (!Storage::disk('s3')->exists($path)) {
-            throw new ApiException("Gambar tidak ditemukan di S3");
+            abort(404, 'Image not found');
         }
 
-        return [
-            'stream' => Storage::disk('s3')->readStream($path),
-            'mime_type' => Storage::disk('s3')->mimeType($path),
-            'file_name' => $product->image
-        ];
+        try {
+            return [
+                'stream' => Storage::disk('s3')->readStream($path),
+                'mime_type' => Storage::disk('s3')->mimeType($path),
+                'file_name' => $product->image
+            ];
+        } catch (\Exception $e) {
+            throw new ApiException('Failed to retrieve image');
+        }
     }
 
 

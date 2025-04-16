@@ -56,10 +56,13 @@ class ProductController extends Controller
     {
         try {
             $imageData = $this->fileService->getProductImage($uuid);
-
+            
             return response()->stream(
                 function () use ($imageData) {
                     fpassthru($imageData['stream']);
+                    if (is_resource($imageData['stream'])) {
+                        fclose($imageData['stream']);
+                    }
                 },
                 200,
                 [
@@ -68,13 +71,13 @@ class ProductController extends Controller
                 ]
             );
         } catch (ApiException $e) {
-            return responseJson(
-                $e->getMessage()
-            );
-        } catch (\Throwable $th) {
-            return responseJson(
-                $th->getMessage()
-            );
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Internal server error'
+            ], 500);
         }
     }
 
