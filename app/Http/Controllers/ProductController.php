@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use App\Exceptions\ApiException;
 use App\Http\Requests\CategoryUpdateRequest;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
@@ -53,16 +54,28 @@ class ProductController extends Controller
 
     public function showImage(string $uuid)
     {
-        // get path image file from fileService
-        $productImagePath = $this->fileService->getProductImage($uuid);
+        try {
+            $imageData = $this->fileService->getProductImage($uuid);
 
-
-        // get MIME type from file
-        $mimeType = mime_content_type($productImagePath);
-
-        return response()->file($productImagePath, [
-            "Content-Type" => $mimeType,
-        ]);
+            return response()->stream(
+                function () use ($imageData) {
+                    fpassthru($imageData['stream']);
+                },
+                200,
+                [
+                    "Content-Type" => $imageData['mime_type'],
+                    "Content-Disposition" => 'inline; filename="' . $imageData['file_name'] . '"'
+                ]
+            );
+        } catch (ApiException $e) {
+            return responseJson(
+                $e->getMessage()
+            );
+        } catch (\Throwable $th) {
+            return responseJson(
+                $th->getMessage()
+            );
+        }
     }
 
     public function showByCategory(string $categoryName)
@@ -91,7 +104,6 @@ class ProductController extends Controller
     {
 
         try {
-            //code...
             $response =  $this->productServices->updateProductImageByUuid($id, $request);
             return responseJson("produk berhasil diubah", new ProductCollection($response));
         } catch (\Throwable $th) {

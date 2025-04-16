@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Exceptions\ApiException;
-use App\Models\Invoices;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Services\FileService;
@@ -21,7 +20,7 @@ class FileServiceImpl implements FileService
      */
     public function deleteProductImage(string $filename)
     {
-        return $this->storage->delete("product/images" . $filename);
+        return Storage::disk('s3')->delete("product/images/$filename");
     }
 
     /**
@@ -29,20 +28,26 @@ class FileServiceImpl implements FileService
      */
     public function deleteStruckTransaction(string $filename)
     {
-        return $this->storage->delete("invoices/$filename");
+        return Storage::disk('s3')->delete("invoices/$filename");
     }
 
     /**
      * @inheritDoc
      */
-    public function uploadProductImage(UploadedFile $request, string $filename)
+    public function uploadProductImage(UploadedFile $file, string $filename)
     {
         try {
-            return $request->storeAs('public/images', $filename);
+            return Storage::disk('s3')->putFileAs(
+                'product/images', // direktori di disk public
+                $file,            // file yang diupload
+                $filename         // nama file tujuan
+            );
         } catch (\Throwable $th) {
             throw new ApiException($th->getMessage());
         }
     }
+
+
 
     /**
      * @inheritDoc
@@ -50,7 +55,11 @@ class FileServiceImpl implements FileService
     public function uploadStruckTransaction(Request $request, string $filename)
     {
         try {
-            return $request->image->storeAs('public/images', $filename);
+            return Storage::disk('s3')->putFileAs(
+                'invoices', // direktori di disk public
+                $request->file('invoice'),            // file yang diupload
+                $filename         // nama file tujuan
+            );
         } catch (\Throwable $th) {
             throw new ApiException($th->getMessage());
         }
@@ -60,23 +69,25 @@ class FileServiceImpl implements FileService
      */
     public function getProductImage(string $uuid)
     {
+        $product = Product::where("uuid", $uuid)->first();
 
-        try {
-            $productImage = Product::where("uuid", $uuid)->first();
-            if ($productImage == null) {
-                throw new ApiException("Produk tidak ditemukan");
-            }
-            $path = storage_path("app/public/images/{$productImage->image}");
-
-            if (!file_exists($path)) {
-                abort(404);
-            }
-
-            return $path;
-        } catch (\Throwable $th) {
-            throw new ApiException($th->getMessage());
+        if (!$product) {
+            throw new ApiException("Produk tidak ditemukan");
         }
+
+        $path = "product/{$product->image}";
+
+        if (!Storage::disk('s3')->exists($path)) {
+            throw new ApiException("Gambar tidak ditemukan di S3");
+        }
+
+        return [
+            'stream' => Storage::disk('s3')->readStream($path),
+            'mime_type' => Storage::disk('s3')->mimeType($path),
+            'file_name' => $product->image
+        ];
     }
+
 
     public  function getTrancsactionIvoice(string $noTransaction)
     {
