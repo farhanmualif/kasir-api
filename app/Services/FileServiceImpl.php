@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Transaction;
 use App\Services\FileService;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 class FileServiceImpl implements FileService
@@ -34,10 +35,10 @@ class FileServiceImpl implements FileService
     /**
      * @inheritDoc
      */
-    public function uploadProductImage(Request $request, string $filename)
+    public function uploadProductImage(UploadedFile $request, string $filename)
     {
         try {
-            return $request->image->storeAs('public/images', $filename);
+            return $request->storeAs('public/images', $filename);
         } catch (\Throwable $th) {
             throw new ApiException($th->getMessage());
         }

@@ -34,45 +34,49 @@ class ProductServiceImpl implements ProductService
      */
     public function create(ProductStoreRequest $request)
     {
+        Log::info('Request data:', $request->all());
+        Log::info('Files:', $request->allFiles());
+
         DB::beginTransaction();
         try {
             $payload = $request->validated();
-            $storeId =  $this->auth->user()->stores()->first()->id;
+            $storeId = $this->auth->user()->stores()->first()->id;
 
-            $findBarcodes = [];
-            foreach ($this->productRepository->findByStoreId($storeId) as $products) {
-                array_push($findBarcodes, $products->barcode);
-            }
-
+            // Validasi barcode unik
+            $findBarcodes = $this->productRepository->findByStoreId($storeId)->pluck('barcode')->toArray();
             if (in_array($payload['barcode'], $findBarcodes)) {
                 throw new ApiException("Barcode sudah digunakan, gunakan barcode yang lain");
             }
 
+            // Validasi harga jual
             if ($payload['selling_price'] < $payload['purchase_price']) {
                 throw new ApiException('Harga jual tidak boleh lebih rendah dari harga beli. Pastikan harga jual lebih tinggi atau sama dengan harga beli.');
             }
 
-            $filename = $request->hasFile('image')
-                ? $this->fileService->uploadProductImage($request, time() . '.' . $request->image->extension())
-                : "product-default.png";
+            // Proses unggahan gambar
+            $filename = "product-default.png";
+            if ($request->hasFile('image')) {
+                $extension = $request->file('image')->extension();
+                $filename = time() . '.' . $extension;
+                $this->fileService->uploadProductImage($request->file('image'), $filename);
+                $filename = "images/{$filename}";
+            }
 
-            $filename = explode("/", $filename);;
-
-
-
+            // Simpan produk
             $insertProduct = $this->productRepository->create([
                 "name" => $payload['name'],
                 "barcode" => $payload['barcode'],
                 "stock" => intval($payload['stock']),
                 "selling_price" => intval($payload['selling_price']),
                 "purchase_price" => intval($payload['purchase_price']),
-                "image" => end($filename),
+                "image" => $filename,
             ]);
 
             if (!$insertProduct) {
                 throw new ApiException('Gagal menyimpan produk');
             }
 
+            // Simpan data pembelian
             $purchasing = $this->purchasingRepository->create([
                 'no_purchasing' => generateNoTransaction(),
                 'product_id' => $insertProduct->id,
@@ -85,20 +89,16 @@ class ProductServiceImpl implements ProductService
                 throw new ApiException('Gagal menyimpan data pembelian');
             }
 
-            $categoriesId = [];
-            if ($payload['category_id'] != null) {
-
-                // validasi ada category pada store?
-                $findCategory =  $this->categoryRepository->getByStoreId($storeId);
-                foreach ($findCategory as $category) {
-                    array_push($categoriesId, $category["id"]);
-                }
-
+            // Validasi dan hubungkan kategori (jika ada)
+            if (!empty($payload['category_id'])) {
+                $categoriesId = $this->categoryRepository->getByStoreId($storeId)->pluck('id')->toArray();
                 if (!in_array($payload['category_id'], $categoriesId)) {
-                    throw new ApiException('category tidak ditemukan');
-                };
+                    throw new ApiException('Category tidak ditemukan');
+                }
+                $insertProduct->categories()->attach($payload['category_id']);
             }
 
+            // Hubungkan produk dengan toko
             $insertProduct->stores()->attach($storeId);
 
             DB::commit();
@@ -286,7 +286,7 @@ class ProductServiceImpl implements ProductService
             $currentProduct = $this->productRepository->getByUuid($uuid);
             $currentProduct['image'] == 'product-default.png' ?: $this->fileService->deleteProductImage($payload['image']);
             $filename =  time() . '.' . $request->image->extension();
-            $this->fileService->uploadProductImage($payload, $filename);
+            $this->fileService->uploadProductImage($request->file('image'), $filename);
             $this->productRepository->updateByUuid($uuid, [
                 'image' => $filename
             ]);

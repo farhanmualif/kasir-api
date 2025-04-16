@@ -89,8 +89,14 @@ class ProductController extends Controller
 
     public function updateImage(UpdateImageProductRequest $request, string $id)
     {
-        $response =  $this->productServices->updateProductImageByUuid($id, $request);
-        return responseJson("produk berhasil diubah", new ProductCollection($response));
+
+        try {
+            //code...
+            $response =  $this->productServices->updateProductImageByUuid($id, $request);
+            return responseJson("produk berhasil diubah", new ProductCollection($response));
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
 
     /**
