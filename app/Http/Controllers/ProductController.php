@@ -67,7 +67,6 @@ class ProductController extends Controller
             [
                 "Content-Type" => $imageData['mime_type'],
                 "Content-Disposition" => 'inline; filename="' . $imageData['file_name'] . '"',
-                "Access-Control-Allow-Origin" => "http://localhost:5173",
                 "Access-Control-Allow-Methods" => "GET, OPTIONS",
                 "Access-Control-Allow-Headers" => "Authorization, Content-Type",
             ]
