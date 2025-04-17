@@ -77,10 +77,15 @@ class FileServiceImpl implements FileService
                 throw new ApiException("Produk tidak ditemukan");
             }
 
-            $path = "product/images/{$product->image}";
+            $path = "product/{$product->image}";
+            // dd($path);
 
             if (!Storage::disk('s3')->exists($path)) {
-                throw new ApiException("Gambar tidak ditemukan di S3");
+                return [
+                    'stream' => Storage::disk('s3')->readStream('product/images/product-default.png'),
+                    'mime_type' => Storage::disk('s3')->mimeType('product/images/product-default.png'),
+                    'file_name' => 'products/images/product-default.png'
+                ];
             }
 
             return [

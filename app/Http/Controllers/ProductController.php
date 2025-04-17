@@ -58,6 +58,7 @@ class ProductController extends Controller
 
         $imageData = $this->fileService->getProductImage($uuid);
 
+
         return response()->stream(
             function () use ($imageData) {
                 fpassthru($imageData['stream']);
