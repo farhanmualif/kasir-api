@@ -39,7 +39,8 @@ class AuthController extends Controller
             if (!$auth) {
                 return \responseJson("unauthenticated", null, false, 400);
             }
-            return \responseJson("authenticated", null);
+
+            return \responseJson("authenticated");
         } catch (\Throwable $th) {
             return \responseJson("server problem", "{$th->getMessage()}", false, 500);
         }

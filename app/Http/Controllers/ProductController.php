@@ -28,7 +28,7 @@ class ProductController extends Controller
             $data['link'] = \url()->current() . '/' . $data->uuid;
         }
 
-        return responseJson("produk ditemukan", ProductCollection::collection($products));
+        return responseJson("produk ditemukan", ProductCollection::collection($products), true, 200);
     }
 
     public function store(ProductStoreRequest $request)

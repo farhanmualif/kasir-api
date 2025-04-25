@@ -6,6 +6,8 @@ use App\Repositories\CategoryRepository;
 use App\Repositories\CategoryRepositoryImpl;
 use App\Repositories\DetailTransactionRepository;
 use App\Repositories\DetailTransactionRepositoryImpl;
+use App\Repositories\DiscountRepository;
+use App\Repositories\DiscountRepositoryImpl;
 use App\Repositories\ProductRepository;
 use App\Repositories\ProductRepositoryImpl;
 use App\Repositories\PurchaseReportRepository;
@@ -28,6 +30,8 @@ use App\Services\TransactionServiceImpl;
 use Illuminate\Support\ServiceProvider;
 use App\Repositories\UserRepositoryImpl;
 use App\Services\CategoryService;
+use App\Services\DiscountService;
+use App\Services\DiscountServiceImpl as ServicesDiscountServiceImpl;
 use App\Services\FileService;
 use App\Services\FileServiceImpl;
 use App\Services\ProductService;
@@ -39,6 +43,7 @@ use App\Services\UserServiceImpl;
 use App\Services\StoreServiceImpl;
 use App\Services\TransactionService;
 use App\Services\PurchasingServiceImpl;
+use DiscountServiceImpl;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -77,6 +82,9 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(PurchasingRepository::class, PurchasingRepositoryImpl::class);
         $this->app->bind(PurchasingService::class, PurchasingServiceImpl::class);
+
+        $this->app->bind(DiscountRepository::class, DiscountRepositoryImpl::class);
+        $this->app->bind(DiscountService::class, ServicesDiscountServiceImpl::class);
     }
 
     /**

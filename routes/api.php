@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\BarcodeController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RaportController;
 use App\Http\Controllers\TransactionController;
@@ -20,39 +21,71 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-
+// Public routes
+Route::get('authenticated', [AuthController::class, 'authenticated']);
 Route::post('login', [AuthController::class, 'login']);
 Route::post('register', [AuthController::class, 'register']);
-Route::get('authenticated', [AuthController::class, 'authenticated']);
 
-
+// Protected routes (require authentication)
 Route::middleware(['auth:sanctum'])->group(function () {
+    // Auth routes
+    Route::post('auth/logout', [AuthController::class, 'logout']);
 
-    Route::resource('products', ProductController::class);
-    Route::resource('barcode', BarcodeController::class);
-    Route::resource('user', UserController::class);
-    Route::resource('transaction', TransactionController::class);
-    Route::resource('category', CategoryController::class);
+    // Resources
+    Route::apiResources([
+        'products' => ProductController::class,
+        'categories' => CategoryController::class,
+        'users' => UserController::class,
+        'transactions' => TransactionController::class,
+        'barcodes' => BarcodeController::class,
+    ]);
 
-    Route::post('products/purchase/existing', [ProductController::class, 'purchaseProductsExist']);
-    Route::post('products/upload', [ProductController::class, 'uploadImage']);
-    Route::get('products/{barcode}/barcode', [ProductController::class, 'showByBarcode']);
-    Route::put('products/{uuid}/image', [ProductController::class, 'updateImage']);
-    Route::get('categories/{categoryName}/products', [ProductController::class, 'showByCategory']);
-    Route::get('products/images/{uuid}', [ProductController::class, 'showImage']);
-    Route::post('categories/{productUuid}/products', [ProductController::class, 'addCategoriesToProduct']);
-    Route::put('categories/{uuid}/product', [CategoryController::class, 'updateByProductUuid']);
-    Route::delete('categories/{productUuid}/products', [ProductController::class, 'removeCategoriesFromProduct']);
+    // Product related routes
+    Route::prefix('products')->group(function () {
+        Route::post('purchase/existing', [ProductController::class, 'purchaseProductsExist']);
+        Route::post('upload', [ProductController::class, 'uploadImage']);
+        Route::get('{barcode}/barcode', [ProductController::class, 'showByBarcode']);
+        Route::put('{uuid}/image', [ProductController::class, 'updateImage']);
+        Route::get('images/{uuid}', [ProductController::class, 'showImage']);
 
-    Route::get('sales/daily/{date}', [RaportController::class, 'getDailySales']);
-    Route::get('sales/monthly/{date}', [RaportController::class, 'getMonthlySales']);
-    Route::get('sales/yearly/{date}', [RaportController::class, 'getYearlySales']);
+        // Product categories
+        Route::post('{productUuid}/categories', [ProductController::class, 'addCategoriesToProduct']);
+        Route::delete('{productUuid}/categories', [ProductController::class, 'removeCategoriesFromProduct']);
+    });
 
-    Route::get('purchases/daily/{date}', [RaportController::class, 'getDailyPurchases']);
-    Route::get('purchases/monthly/{date}', [RaportController::class, 'getMonthlyPurchases']);
-    Route::get('purchases/yearly/{date}', [RaportController::class, 'getYearlyPurchases']);
-    Route::get('transaction/{noTransaction}/invoice', [TransactionController::class, 'showInvoice']);
-    Route::get('invoices/{noTransaction}', [TransactionController::class, 'showSalesInvoice']);
+    // Category related routes
+    Route::prefix('categories')->group(function () {
+        Route::get('{categoryName}/products', [ProductController::class, 'showByCategory']);
+        Route::put('{uuid}/product', [CategoryController::class, 'updateByProductUuid']);
+    });
 
-    Route::post('logout', [AuthController::class, 'logout']);
+    // Sales reports
+    Route::prefix('reports/sales')->group(function () {
+        Route::get('daily/{date}', [RaportController::class, 'getDailySales']);
+        Route::get('monthly/{date}', [RaportController::class, 'getMonthlySales']);
+        Route::get('yearly/{date}', [RaportController::class, 'getYearlySales']);
+    });
+
+    // Purchase reports
+    Route::prefix('reports/purchases')->group(function () {
+        Route::get('daily/{date}', [RaportController::class, 'getDailyPurchases']);
+        Route::get('monthly/{date}', [RaportController::class, 'getMonthlyPurchases']);
+        Route::get('yearly/{date}', [RaportController::class, 'getYearlyPurchases']);
+    });
+
+    // Transaction invoices
+    Route::prefix('transactions')->group(function () {
+        Route::get('{noTransaction}/invoice', [TransactionController::class, 'showInvoice']);
+        Route::get('{noTransaction}/sales-invoice', [TransactionController::class, 'showSalesInvoice']);
+    });
+
+    // Discounts
+    Route::prefix('discounts')->group(function () {
+        Route::get('/', [DiscountController::class, 'index']);
+        Route::post('/', [DiscountController::class, 'store']);
+        Route::get('{id}', [DiscountController::class, 'show'])->where('id', '[0-9]+');
+        Route::put('{id}', [DiscountController::class, 'update'])->where('id', '[0-9]+');
+        Route::delete('{id}', [DiscountController::class, 'destroy'])->where('id', '[0-9]+');
+        Route::get('search', [DiscountController::class, 'search']);
+    });
 });
